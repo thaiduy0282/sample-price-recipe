@@ -22,6 +22,7 @@ import lombok.Setter;
 
 public class PriceRecipe {
 
+	private String id;
 	private String scope;
 	private String scopeValue;
 	private String priceSetting;
