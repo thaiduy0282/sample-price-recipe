@@ -166,13 +166,13 @@ public class PricingAdjustmentService {
      */
     private DiscountDetails createDiscountDetails(PriceRecipeRange range, LineItem item, double adjustedPrice, int nextSequence, PriceRecipe priceRecipe) {
         return new DiscountDetails(
-                range.getApplicationType(),
-                Double.parseDouble(range.getApplicationValue()),
-                item.getNetPrice(),
+                priceRecipe.getApplicationType(),
+                priceRecipe.getApplicationValue(),
+                Double.parseDouble(priceRecipe.getPriceApplicationON()),
                 adjustedPrice,
                 0d, // need to correct this value for real case
-                new Date().getTime(),
-                null, // need to correct this value for real case
+                new Date().getTime(), // need to correct this value for real case
+                "Recipe / Formula", // need to correct this value for real case
                 null, // need to correct this value for real case
                 item.getProductId(),
                 item.getId(),
