@@ -1,7 +1,7 @@
 package com.example.demo;
 
 import com.example.demo.models.*;
-import com.example.demo.utils.ParseFormula;
+import com.example.demo.utils.FormulaEvaluator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.*;
@@ -57,24 +57,24 @@ public class DemoApplication {
 	}
 
 	/**
-	 * Simulate usecase: get formula from API payload and evalute it true or not
+	 * Simulate use case: get formula from API payload and evalute it true or not
 	 * Input: formula, lineItemId
 	 * Output: true or false
 	 * Notes:
 	 * - Pay attention to "==" operation
+	 * - variables should be lowercase
 	 * - Can FE provide payload product.getType() instead of product.type ?
-	 * - Main function: ParseFormula.parseFormula(formula, lineItemId)
 	 */
 	private static void mockParseFormula() {
 		// this formula provided from API payload
 		String formula = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-				+ "|| product.tag.bg == \"CNS\""
-				+ "|| lineItem.quantity > 10"
-				+ "|| lineItem.locationName == \"HYDERABAD\"";
+				+ " || product.tag.bg == \"CNS\""
+				+ " || lineItem.quantity > 10"
+				+ " || lineItem.locationName == \"HYDERABAD\"";
 
 		// Can FE provide payload like this ?
 		// "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\") || product.getTag().getBg() == \"CNS\" || lineItem.getQuantity() > 10 || lineItem.getLocationName() == \"HYDERABAD\""
-		System.out.println("Result: " + ParseFormula.parseFormula(formula, "lineitem1"));
+		System.out.println("Result: " + FormulaEvaluator.evaluateFormula(formula, "lineitem1"));
 	}
 
 }
