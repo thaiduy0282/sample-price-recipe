@@ -23,71 +23,97 @@ public class PricingAdjustmentService {
         for (Map.Entry<String, List<LineItem>> entry : groupedLineItems.entrySet()) {
             String timeDimensionName = entry.getKey();
             List<LineItem> items = entry.getValue();
-            // Apply price adjustments for groups that satisfy the conditions
-            applyPriceAdjustments(priceRecipe, timeDimensionName, items, profilingRequest);
+            List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
+                    .filter(r -> r.getSourceDimensionName().contains(timeDimensionName)).toList();
+            // Apply price adjustments for groups
+            applyPriceAdjustments(priceRecipe, priceRecipeRanges, items, profilingRequest);
         }
     }
 
     /**
      * Groups the provided list of LineItems by their timeDimensionName based on the associated PriceRecipeRanges.
+     * The total quantity of each group must fall within the range defined by range.getStartTier() and range.getEndTier().
      *
-     * @param lineItems List of LineItems to be grouped.
+     * @param lineItems         List of LineItems to be grouped.
      * @param priceRecipeRanges List of PriceRecipeRange objects defining the grouping criteria.
      * @return A map where the key is the timeDimensionName, and the value is the list of LineItems that belong to that group.
      */
     private Map<String, List<LineItem>> groupLineItemsByTimeDimension(List<LineItem> lineItems, List<PriceRecipeRange> priceRecipeRanges) {
         Map<String, List<LineItem>> groupedLineItems = new HashMap<>();
 
-        // Iterate over each PriceRecipeRange to determine grouping criteria
         for (PriceRecipeRange range : priceRecipeRanges) {
             List<String> sourceDimensionNames = range.getSourceDimensionName();
+            Map<String, List<LineItem>> tempGroupedItems = groupLineItems(lineItems, sourceDimensionNames);
 
-            // Check each LineItem to see if it matches the grouping criteria
-            for (LineItem lineItem : lineItems) {
-                String timeDimensionName = lineItem.getTimeDimensionName();
-                if (sourceDimensionNames.contains(timeDimensionName)) {
-                    // Group LineItems by timeDimensionName
-                    groupedLineItems.computeIfAbsent(timeDimensionName, k -> new ArrayList<>()).add(lineItem);
-                }
-            }
+            addValidGroupsToMap(tempGroupedItems, range, groupedLineItems);
         }
+
         return groupedLineItems;
     }
 
     /**
-     * Applies price adjustments (discount/markup) to the grouped LineItems
-     * if the group meets the specified conditions based on PriceRecipeRange.
+     * Groups LineItems by their timeDimensionName based on the provided source dimension names.
      *
-     * @param priceRecipe      The PriceRecipe containing price adjustment rules.
-     * @param timeDimensionName The time dimension name to match with the price ranges.
-     * @param items            The list of LineItems that belong to the current group.
-     * @param profilingRequest  The request object containing discount details.
+     * @param lineItems          List of LineItems to be grouped.
+     * @param sourceDimensionNames The source dimension names for grouping.
+     * @return A map where the key is the timeDimensionName, and the value is the list of LineItems that belong to that group.
      */
-    private void applyPriceAdjustments(PriceRecipe priceRecipe, String timeDimensionName, List<LineItem> items, ProfilingRequestDTO profilingRequest) {
-        List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges();
+    private Map<String, List<LineItem>> groupLineItems(List<LineItem> lineItems, List<String> sourceDimensionNames) {
+        Map<String, List<LineItem>> tempGroupedItems = new HashMap<>();
 
-        // Calculate the total quantity for the current group
-        double totalQuantity = calculateTotalQuantity(items);
+        for (LineItem lineItem : lineItems) {
+            String timeDimensionName = lineItem.getTimeDimensionName();
+            if (sourceDimensionNames.contains(timeDimensionName)) {
+                tempGroupedItems.computeIfAbsent(timeDimensionName, k -> new ArrayList<>()).add(lineItem);
+            }
+        }
 
-        // Check each PriceRecipeRange to see if it matches the quantity criteria
-        for (PriceRecipeRange range : priceRecipeRanges) {
-            if (isEligibleForAdjustment(range, timeDimensionName, totalQuantity)) {
-                applyAdjustmentsToLineItems(range, items, profilingRequest, priceRecipe);
+        return tempGroupedItems;
+    }
+
+    /**
+     * Adds valid groups of LineItems to the final grouped map based on the specified range criteria.
+     *
+     * @param tempGroupedItems   A map of temporary grouped LineItems.
+     * @param range              The PriceRecipeRange defining the tier limits.
+     * @param groupedLineItems   The map to add valid groups to.
+     */
+    private void addValidGroupsToMap(Map<String, List<LineItem>> tempGroupedItems, PriceRecipeRange range, Map<String, List<LineItem>> groupedLineItems) {
+        for (Map.Entry<String, List<LineItem>> entry : tempGroupedItems.entrySet()) {
+            String timeDimensionName = entry.getKey();
+            List<LineItem> itemsInGroup = entry.getValue();
+            double totalQuantity = calculateTotalQuantity(itemsInGroup);
+
+            if (isTotalQuantityInRange(totalQuantity, range)) {
+                groupedLineItems.put(timeDimensionName, itemsInGroup);
             }
         }
     }
 
     /**
-     * Checks if the specified PriceRecipeRange is eligible for adjustment
-     * based on the time dimension name and total quantity.
+     * Checks if the total quantity falls within the specified range.
      *
-     * @param range            The PriceRecipeRange to check.
-     * @param timeDimensionName The time dimension name to match.
-     * @param totalQuantity     The total quantity to validate against the range.
-     * @return True if eligible for adjustment, false otherwise.
+     * @param totalQuantity The total quantity to check.
+     * @param range        The PriceRecipeRange containing the tier limits.
+     * @return true if the total quantity is within the range, false otherwise.
      */
-    private boolean isEligibleForAdjustment(PriceRecipeRange range, String timeDimensionName, double totalQuantity) {
-        return range.getSourceDimensionName().contains(timeDimensionName) && isQuantityInRange(totalQuantity, range);
+    private boolean isTotalQuantityInRange(double totalQuantity, PriceRecipeRange range) {
+        return totalQuantity >= range.getStartTier() && totalQuantity <= range.getEndTier();
+    }
+
+    /**
+     * Applies price adjustments (discount/markup) to the grouped LineItems
+     *
+     * @param priceRecipe      The PriceRecipe containing price adjustment rules.
+     * @param priceRecipeRanges List of PriceRecipeRange objects defining the grouping criteria.
+     * @param items            The list of LineItems that belong to the current group.
+     * @param profilingRequest  The request object containing discount details.
+     */
+    private void applyPriceAdjustments(PriceRecipe priceRecipe, List<PriceRecipeRange> priceRecipeRanges, List<LineItem> items, ProfilingRequestDTO profilingRequest) {
+        // Check each PriceRecipeRange to see if it matches the quantity criteria
+        for (PriceRecipeRange range : priceRecipeRanges) {
+            applyAdjustmentsToLineItems(range, items, profilingRequest, priceRecipe);
+        }
     }
 
     /**
@@ -170,17 +196,6 @@ public class PricingAdjustmentService {
     private double calculateTotalQuantity(List<LineItem> items) {
         // Sum up the quantity for each LineItem
         return items.stream().mapToDouble(LineItem::getQuantity).sum();
-    }
-
-    /**
-     * Checks whether the total quantity falls within the specified startTier and endTier range.
-     *
-     * @param totalQuantity The total quantity to be checked.
-     * @param range The PriceRecipeRange that defines the startTier and endTier.
-     * @return True if the total quantity is within the range, false otherwise.
-     */
-    private boolean isQuantityInRange(double totalQuantity, PriceRecipeRange range) {
-        return totalQuantity >= range.getStartTier() && totalQuantity <= range.getEndTier();
     }
 
     /**
