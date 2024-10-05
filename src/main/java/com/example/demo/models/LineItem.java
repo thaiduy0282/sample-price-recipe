@@ -16,4 +16,6 @@ public class LineItem  {
 	private String productFamily;
 	private Double netPrice;
 	private String configurationName;
+	private String timeDimensionName;
+	private Double quantity;
 }
