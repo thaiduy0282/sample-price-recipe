@@ -17,89 +17,85 @@ public class PricingAdjustmentService {
      */
     public void calculateCumulativeRange(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
         // Group LineItems by their timeDimensionName
-        Map<String, List<LineItem>> groupedLineItems = groupLineItemsByTimeDimension(profilingRequest.getLineItems(), priceRecipe.getRanges());
+        Map<String, List<LineItem>> groupedLineItems = groupLineItemsByDimension(profilingRequest.getLineItems(), priceRecipe.getRanges());
 
         // Iterate over each group of LineItems
         for (Map.Entry<String, List<LineItem>> entry : groupedLineItems.entrySet()) {
             String timeDimensionName = entry.getKey();
             List<LineItem> items = entry.getValue();
             List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
-                    .filter(r -> r.getSourceDimensionName().contains(timeDimensionName)).toList();
+                    .filter(r -> r.getTargetDimensionName().contains(timeDimensionName)).toList();
             // Apply price adjustments for groups
             applyPriceAdjustments(priceRecipe, priceRecipeRanges, items, profilingRequest);
         }
     }
 
     /**
-     * Groups the provided list of LineItems by their timeDimensionName based on the associated PriceRecipeRanges.
-     * The total quantity of each group must fall within the range defined by range.getStartTier() and range.getEndTier().
+     * Groups the LineItems by their target dimension names based on the provided PriceRecipeRanges.
+     * The LineItems are grouped if their total quantity of their source dimension names falls within the specified start and end tier range.
      *
-     * @param lineItems         List of LineItems to be grouped.
-     * @param priceRecipeRanges List of PriceRecipeRange objects defining the grouping criteria.
-     * @return A map where the key is the timeDimensionName, and the value is the list of LineItems that belong to that group.
+     * @param lineItems         The list of LineItems to be grouped.
+     * @param priceRecipeRanges The list of PriceRecipeRange objects defining the grouping criteria.
+     * @return A map where the key is the target dimension name and the value is the list of LineItems that belong to that group.
      */
-    private Map<String, List<LineItem>> groupLineItemsByTimeDimension(List<LineItem> lineItems, List<PriceRecipeRange> priceRecipeRanges) {
+    private Map<String, List<LineItem>> groupLineItemsByDimension(List<LineItem> lineItems, List<PriceRecipeRange> priceRecipeRanges) {
         Map<String, List<LineItem>> groupedLineItems = new HashMap<>();
 
+        // Iterate over each PriceRecipeRange to determine how to group LineItems
         for (PriceRecipeRange range : priceRecipeRanges) {
+            // Get the source dimension names to group the LineItems
             List<String> sourceDimensionNames = range.getSourceDimensionName();
-            Map<String, List<LineItem>> tempGroupedItems = groupLineItems(lineItems, sourceDimensionNames);
 
-            addValidGroupsToMap(tempGroupedItems, range, groupedLineItems);
+            // Group the LineItems by source dimension names
+            Map<String, List<LineItem>> tempGroupedItems = filterLineItemsByDimensions(lineItems, sourceDimensionNames);
+
+            // Process each group to determine if it meets the total quantity condition
+            for (Map.Entry<String, List<LineItem>> entry : tempGroupedItems.entrySet()) {
+                List<LineItem> itemsInGroup = entry.getValue();
+                double totalQuantity = calculateTotalQuantity(itemsInGroup);
+
+                // If the total quantity is within the specified tier range, group the items by the target dimension name
+                if (isTotalQuantityInRange(totalQuantity, range)) {
+                    groupedLineItems.putAll(filterLineItemsByDimensions(lineItems, range.getTargetDimensionName()));
+                }
+            }
         }
 
         return groupedLineItems;
     }
 
     /**
-     * Groups LineItems by their timeDimensionName based on the provided source dimension names.
+     * Filters LineItems based on the provided dimension names.
      *
-     * @param lineItems          List of LineItems to be grouped.
-     * @param sourceDimensionNames The source dimension names for grouping.
-     * @return A map where the key is the timeDimensionName, and the value is the list of LineItems that belong to that group.
+     * @param lineItems            The list of LineItems to be filtered.
+     * @param dimensionNames       The dimension names used for filtering.
+     * @return A map where the key is the dimension name and the value is the list of LineItems that match that dimension.
      */
-    private Map<String, List<LineItem>> groupLineItems(List<LineItem> lineItems, List<String> sourceDimensionNames) {
-        Map<String, List<LineItem>> tempGroupedItems = new HashMap<>();
+    private Map<String, List<LineItem>> filterLineItemsByDimensions(List<LineItem> lineItems, List<String> dimensionNames) {
+        Map<String, List<LineItem>> filteredItems = new HashMap<>();
 
         for (LineItem lineItem : lineItems) {
             String timeDimensionName = lineItem.getTimeDimensionName();
-            if (sourceDimensionNames.contains(timeDimensionName)) {
-                tempGroupedItems.computeIfAbsent(timeDimensionName, k -> new ArrayList<>()).add(lineItem);
+            if (dimensionNames.contains(timeDimensionName)) {
+                // Group the LineItems by the dimension name
+                filteredItems.computeIfAbsent(timeDimensionName, k -> new ArrayList<>()).add(lineItem);
             }
         }
 
-        return tempGroupedItems;
+        return filteredItems;
     }
 
     /**
-     * Adds valid groups of LineItems to the final grouped map based on the specified range criteria.
-     *
-     * @param tempGroupedItems   A map of temporary grouped LineItems.
-     * @param range              The PriceRecipeRange defining the tier limits.
-     * @param groupedLineItems   The map to add valid groups to.
-     */
-    private void addValidGroupsToMap(Map<String, List<LineItem>> tempGroupedItems, PriceRecipeRange range, Map<String, List<LineItem>> groupedLineItems) {
-        for (Map.Entry<String, List<LineItem>> entry : tempGroupedItems.entrySet()) {
-            String timeDimensionName = entry.getKey();
-            List<LineItem> itemsInGroup = entry.getValue();
-            double totalQuantity = calculateTotalQuantity(itemsInGroup);
-
-            if (isTotalQuantityInRange(totalQuantity, range)) {
-                groupedLineItems.put(timeDimensionName, itemsInGroup);
-            }
-        }
-    }
-
-    /**
-     * Checks if the total quantity falls within the specified range.
+     * Determines if the total quantity is within the specified start and end tier range.
      *
      * @param totalQuantity The total quantity to check.
-     * @param range        The PriceRecipeRange containing the tier limits.
-     * @return true if the total quantity is within the range, false otherwise.
+     * @param range         The PriceRecipeRange object defining the start and end tier limits.
+     * @return true if the total quantity is within the range, otherwise false.
      */
     private boolean isTotalQuantityInRange(double totalQuantity, PriceRecipeRange range) {
         return totalQuantity >= range.getStartTier() && totalQuantity <= range.getEndTier();
     }
+
 
     /**
      * Applies price adjustments (discount/markup) to the grouped LineItems

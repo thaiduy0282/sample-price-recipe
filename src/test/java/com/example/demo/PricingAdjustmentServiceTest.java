@@ -34,7 +34,7 @@ public class PricingAdjustmentServiceTest {
         // Setup test data
         List<LineItem> lineItems = Arrays.asList(
                 new LineItem("1", "Product A", "Monthly", "Tag1", "Category1", "Family1", 100.0, "Config1", "TimeDim1", 10.0, "1"),
-                new LineItem("2", "Product B", "Monthly", "Tag1", "Category1", "Family1", 200.0, "Config2", "TimeDim1", 20.0, "1")
+                new LineItem("2", "Product B", "Monthly", "Tag1", "Category1", "Family1", 200.0, "Config2", "TimeDim2", 20.0, "1")
         );
 
         // Add line items to profilingRequestDTO
@@ -48,19 +48,18 @@ public class PricingAdjustmentServiceTest {
         range.setApplicationType("%");
         range.setApplicationValue("10");
         range.setSourceDimensionName(List.of("TimeDim1"));
+        range.setTargetDimensionName(List.of("TimeDim2"));
         priceRecipe.setRanges(List.of(range));
 
         // Call method under test
         service.calculateCumulativeRange(priceRecipe, profilingRequestDTO);
 
         // Verify discount details
-        assertEquals(2, profilingRequestDTO.getDiscountDetails().size());
+        assertEquals(1, profilingRequestDTO.getDiscountDetails().size());
 
         // Verify that net prices are adjusted
-        assertEquals(lineItems.get(0).getNetPrice(), profilingRequestDTO.getDiscountDetails().get(0).getAppliedOnAmount());
-        assertEquals(90.0, profilingRequestDTO.getDiscountDetails().get(0).getAfterAdjustment());
-        assertEquals(lineItems.get(1).getNetPrice(), profilingRequestDTO.getDiscountDetails().get(1).getAppliedOnAmount());
-        assertEquals(180.0, profilingRequestDTO.getDiscountDetails().get(1).getAfterAdjustment());
+        assertEquals(lineItems.get(1).getNetPrice(), profilingRequestDTO.getDiscountDetails().get(0).getAppliedOnAmount());
+        assertEquals(180.0, profilingRequestDTO.getDiscountDetails().get(0).getAfterAdjustment());
     }
 
 
@@ -68,8 +67,9 @@ public class PricingAdjustmentServiceTest {
     @Test
     void testCalculateCumulativeRange_WithMarkupAmount() {
         // Setup test data
-        List<LineItem> lineItems = List.of(
-                new LineItem("1", "Product C", "Monthly", "Tag2", "Category1", "Family1", 150.0, "Config1", "TimeDim2", 5.0, "1")
+        List<LineItem> lineItems = Arrays.asList(
+                new LineItem("1", "Product A", "Monthly", "Tag1", "Category1", "Family1", 100.0, "Config1", "TimeDim1", 10.0, "1"),
+                new LineItem("2", "Product B", "Monthly", "Tag1", "Category1", "Family1", 200.0, "Config2", "TimeDim2", 20.0, "1")
         );
 
         profilingRequestDTO.setLineItems(lineItems);
@@ -81,15 +81,16 @@ public class PricingAdjustmentServiceTest {
         range.setDealStrategy("markup");
         range.setApplicationType("Amount");
         range.setApplicationValue("20");
-        range.setSourceDimensionName(List.of("TimeDim2"));
+        range.setSourceDimensionName(List.of("TimeDim1"));
+        range.setTargetDimensionName(List.of("TimeDim2"));
         priceRecipe.setRanges(List.of(range));
 
         // Call method under test
         service.calculateCumulativeRange(priceRecipe, profilingRequestDTO);
 
         // Verify that net prices are adjusted
-        assertEquals(lineItems.getFirst().getNetPrice(), profilingRequestDTO.getDiscountDetails().getFirst().getAppliedOnAmount());
-        assertEquals(170.0, profilingRequestDTO.getDiscountDetails().getFirst().getAfterAdjustment());
+        assertEquals(lineItems.get(1).getNetPrice(), profilingRequestDTO.getDiscountDetails().get(0).getAppliedOnAmount());
+        assertEquals(220.0, profilingRequestDTO.getDiscountDetails().get(0).getAfterAdjustment());
 
 
         // Verify discount details
@@ -97,7 +98,7 @@ public class PricingAdjustmentServiceTest {
     }
 
     @Test
-    void testCalculateCumulativeRange_NoMatchingTimeDimension() {
+    void testCalculateCumulativeRange_NoMatchingSourceDimensionName() {
         // Setup test data
         List<LineItem> lineItems = List.of(
                 new LineItem("1", "Product D", "Monthly", "Tag3", "Category1", "Family1", 250.0, "Config1", "TimeDim3", 15.0, "1")
@@ -112,7 +113,62 @@ public class PricingAdjustmentServiceTest {
         range.setDealStrategy("discount");
         range.setApplicationType("%");
         range.setApplicationValue("10");
-        range.setSourceDimensionName(List.of("TimeDim4"));
+        range.setTargetDimensionName(List.of("TimeDim3"));
+        range.setSourceDimensionName(List.of("TimeDim2"));
+        priceRecipe.setRanges(List.of(range));
+
+        // Call method under test
+        service.calculateCumulativeRange(priceRecipe, profilingRequestDTO);
+
+        // Verify no discount details
+        assertEquals(0, profilingRequestDTO.getDiscountDetails().size());
+    }
+
+    @Test
+    void testCalculateCumulativeRange_NoMatchingTargetDimensionName() {
+        // Setup test data
+        List<LineItem> lineItems = List.of(
+                new LineItem("1", "Product D", "Monthly", "Tag3", "Category1", "Family1", 250.0, "Config1", "TimeDim3", 15.0, "1")
+        );
+
+        profilingRequestDTO.setLineItems(lineItems);
+
+        // Create PriceRecipeRange with different timeDimensionName
+        PriceRecipeRange range = new PriceRecipeRange();
+        range.setStartTier(1);
+        range.setEndTier(10);
+        range.setDealStrategy("discount");
+        range.setApplicationType("%");
+        range.setApplicationValue("10");
+        range.setTargetDimensionName(List.of("TimeDim1"));
+        range.setSourceDimensionName(List.of("TimeDim3"));
+        priceRecipe.setRanges(List.of(range));
+
+        // Call method under test
+        service.calculateCumulativeRange(priceRecipe, profilingRequestDTO);
+
+        // Verify no discount details
+        assertEquals(0, profilingRequestDTO.getDiscountDetails().size());
+    }
+
+    @Test
+    void testCalculateCumulativeRange_NoMatchingDimensionName() {
+        // Setup test data
+        List<LineItem> lineItems = List.of(
+                new LineItem("1", "Product D", "Monthly", "Tag3", "Category1", "Family1", 250.0, "Config1", "TimeDim33", 15.0, "1")
+        );
+
+        profilingRequestDTO.setLineItems(lineItems);
+
+        // Create PriceRecipeRange with different timeDimensionName
+        PriceRecipeRange range = new PriceRecipeRange();
+        range.setStartTier(1);
+        range.setEndTier(10);
+        range.setDealStrategy("discount");
+        range.setApplicationType("%");
+        range.setApplicationValue("10");
+        range.setTargetDimensionName(List.of("TimeDim3"));
+        range.setSourceDimensionName(List.of("TimeDim2"));
         priceRecipe.setRanges(List.of(range));
 
         // Call method under test
@@ -126,7 +182,8 @@ public class PricingAdjustmentServiceTest {
     void testCalculateCumulativeRange_QuantityOutOfRange() {
         // Setup test data
         List<LineItem> lineItems = List.of(
-                new LineItem("1", "Product E", "Monthly", "Tag4", "Category1", "Family1", 300.0, "Config1", "TimeDim5", 2.0, "1")
+                new LineItem("1", "Product E", "Monthly", "Tag4", "Category1", "Family1", 300.0, "Config1", "TimeDim5", 2.0, "1"),
+                new LineItem("2", "Product B", "Monthly", "Tag1", "Category1", "Family1", 200.0, "Config2", "TimeDim2", 20.0, "1")
         );
 
         profilingRequestDTO.setLineItems(lineItems);
@@ -139,6 +196,7 @@ public class PricingAdjustmentServiceTest {
         range.setApplicationType("%");
         range.setApplicationValue("20");
         range.setSourceDimensionName(List.of("TimeDim5"));
+        range.setTargetDimensionName(List.of("TimeDim2"));
         priceRecipe.setRanges(List.of(range));
 
         // Call method under test
@@ -167,6 +225,7 @@ public class PricingAdjustmentServiceTest {
         range1.setApplicationType("%");
         range1.setApplicationValue("15");
         range1.setSourceDimensionName(List.of("TimeDim6"));
+        range1.setTargetDimensionName(List.of("TimeDim7"));
 
         PriceRecipeRange range2 = new PriceRecipeRange();
         range2.setStartTier(1);
@@ -175,24 +234,20 @@ public class PricingAdjustmentServiceTest {
         range2.setApplicationType("Amount");
         range2.setApplicationValue("30");
         range2.setSourceDimensionName(List.of("TimeDim7"));
+        range2.setTargetDimensionName(List.of("TimeDim8"));
 
         priceRecipe.setRanges(Arrays.asList(range1, range2));
 
         // Call method under test
         service.calculateCumulativeRange(priceRecipe, profilingRequestDTO);
 
-        // Discount applied
-        assertEquals(lineItems.getFirst().getNetPrice(), profilingRequestDTO.getDiscountDetails().getFirst().getAppliedOnAmount());
-        assertEquals(102.0, profilingRequestDTO.getDiscountDetails().get(0).getAfterAdjustment());
-        assertEquals(lineItems.getFirst().getNetPrice(), profilingRequestDTO.getDiscountDetails().getFirst().getAppliedOnAmount());
-        assertEquals(187.0, profilingRequestDTO.getDiscountDetails().get(1).getAfterAdjustment());
         // Markup applied
-        assertEquals(lineItems.getFirst().getNetPrice(), profilingRequestDTO.getDiscountDetails().getFirst().getAppliedOnAmount());
-        assertEquals(210.0, profilingRequestDTO.getDiscountDetails().get(2).getAfterAdjustment());
+        assertEquals(lineItems.get(2).getNetPrice(), profilingRequestDTO.getDiscountDetails().getFirst().getAppliedOnAmount());
+        assertEquals(153.0, profilingRequestDTO.getDiscountDetails().get(0).getAfterAdjustment());
 
 
 
         // Verify discount details
-        assertEquals(3, profilingRequestDTO.getDiscountDetails().size());
+        assertEquals(1, profilingRequestDTO.getDiscountDetails().size());
     }
 }
