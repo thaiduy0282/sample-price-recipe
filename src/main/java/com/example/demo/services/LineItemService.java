@@ -5,6 +5,7 @@ import com.example.demo.models.LineItem;
 import com.example.demo.models.Product;
 import com.example.demo.models.Tag;
 
+// MODIFY this code in real use case
 public class LineItemService {
     // TRUE case:
     public static Tag tagTrue = new Tag(){

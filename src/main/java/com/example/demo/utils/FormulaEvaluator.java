@@ -4,6 +4,7 @@ import com.example.demo.models.Category;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.Product;
 import com.example.demo.services.LineItemService;
+import org.apache.commons.lang3.StringUtils;
 import org.mvel2.MVEL;
 
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ParseFormula {
+public class FormulaEvaluator {
     public static String capitalizeAfterDot(String input) {
         StringBuilder sb = new StringBuilder();
         boolean capitalizeNext = false; // Flag to indicate next character should be uppercase
@@ -67,7 +68,10 @@ public class ParseFormula {
         Set<String> targetObjects = new HashSet<>();
         for (String memberObject : memberObjects) {
             String[] parts = memberObject.split("\\.");
-            targetObjects.add(parts[0]);
+
+            if(StringUtils.isNotBlank(parts[0])){
+                targetObjects.add(parts[0]);
+            }
         }
 
         return targetObjects;
@@ -88,18 +92,19 @@ public class ParseFormula {
         return context;
     }
 
+    // MODIFY this function in real use case
     public static void addPropertyToContext(String targetObject, Map<String, Object> context, String lineItemId) {
         switch (targetObject) {
             case "product":
-                Product product = LineItemService.getProductById(lineItemId); // sample code, replace it!
+                Product product = LineItemService.getProductById(lineItemId);
                 context.put("product", product);
                 break;
             case "lineItem":
-                LineItem lineItem = LineItemService.getLineItemById(lineItemId); // sample code, replace it!
+                LineItem lineItem = LineItemService.getLineItemById(lineItemId);
                 context.put("lineItem", lineItem);
                 break;
             case "category":
-                Category category = LineItemService.getCategoryById(lineItemId); // sample code, replace it!
+                Category category = LineItemService.getCategoryById(lineItemId);
                 context.put("category", category);
                 break;
             default:
@@ -114,12 +119,16 @@ public class ParseFormula {
      * @param formula the formula to parse
      * @return true if the formula is valid, false otherwise
      */
-    public static boolean parseFormula(String formula, String lineItemId) {
+    public static boolean evaluateFormula(String formula, String lineItemId) {
         String expression = convertPropertyToGetter(formula);
 
         Set<String> targetObjects = extractProperties(formula);
 
         Map<String, Object> vars = constructMvelContext(targetObjects, lineItemId);
+
+        if(vars.isEmpty()){
+            throw new IllegalArgumentException("No target objects found in the formula");
+        }
 
         Serializable compiled = MVEL.compileExpression(expression);
         return (boolean) MVEL.executeExpression(compiled, vars);
