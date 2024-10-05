@@ -1,16 +1,10 @@
 package com.example.demo;
 
-import com.example.demo.models.PriceList;
-import com.example.demo.models.PriceListItem;
-import com.example.demo.models.PriceProfileStep;
-import com.example.demo.models.PriceRecipe;
-import com.example.demo.models.ProfilingRequestDTO;
+import com.example.demo.models.*;
+import com.example.demo.utils.ParseFormula;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.example.demo.utils.MockDataGenerator.fetchAllRecipes;
 
@@ -18,7 +12,7 @@ import static com.example.demo.utils.MockDataGenerator.fetchAllRecipes;
 public class DemoApplication {
 
 	public static void main(String[] args) {
-
+		mockParseFormula();
 	}
 
 
@@ -61,4 +55,26 @@ public class DemoApplication {
 
 		// Append the DiscountDetails object to the profileRequestDTO object
 	}
+
+	/**
+	 * Simulate usecase: get formula from API payload and evalute it true or not
+	 * Input: formula, lineItemId
+	 * Output: true or false
+	 * Notes:
+	 * - Pay attention to "==" operation
+	 * - Can FE provide payload product.getType() instead of product.type ?
+	 * - Main function: ParseFormula.parseFormula(formula, lineItemId)
+	 */
+	private static void mockParseFormula() {
+		// this formula provided from API payload
+		String formula = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
+				+ "|| product.tag.bg == \"CNS\""
+				+ "|| lineItem.quantity > 10"
+				+ "|| lineItem.locationName == \"HYDERABAD\"";
+
+		// Can FE provide payload like this ?
+		// "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\") || product.getTag().getBg() == \"CNS\" || lineItem.getQuantity() > 10 || lineItem.getLocationName() == \"HYDERABAD\""
+		System.out.println("Result: " + ParseFormula.parseFormula(formula, "lineitem1"));
+	}
+
 }
