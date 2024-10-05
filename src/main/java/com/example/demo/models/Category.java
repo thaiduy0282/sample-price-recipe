@@ -29,4 +29,5 @@ public class Category {
 	public boolean isSearchable;
 	private String priceListId;
 	private String priceListName;
+	private String name;
 }
