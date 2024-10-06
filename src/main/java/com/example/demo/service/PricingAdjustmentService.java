@@ -157,25 +157,7 @@ public class PricingAdjustmentService {
      */
     private void createAndAddDiscountDetails(LineItem lineItem, double beforeAdjustmentPrice, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
         // Create a new DiscountDetails object with the necessary parameters
-        DiscountDetails discountDetails = new DiscountDetails(
-                priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
-                priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
-                beforeAdjustmentPrice, // Original price before adjustment
-                adjustedPrice, // The calculated adjusted price after applying discount or markup
-                0d, // Placeholder for an unspecified value; to be corrected for the real case
-                new Date().getTime(), // Timestamp of the discount application; to be corrected for the real case
-                "Recipe", // Placeholder for a more descriptive name; to be corrected for the real case
-                null, // Placeholder for a reference; to be corrected for the real case
-                lineItem.getProductId(), // The product ID from the line item
-                lineItem.getId(), // The line item ID
-                sequenceNumber, // Sequence number to determine the order of discount details
-                null, // Placeholder for additional information; to be corrected for the real case
-                priceRecipe.getId(), // ID of the price recipe
-                priceRecipe.getPriceAppliedTo() // The target of the price application (e.g., product or service)
-        );
-
-        // Optionally set the name of the discount using price application ON
-        discountDetails.setName(priceRecipe.getPriceApplicationON());
+        DiscountDetails discountDetails = createDiscountDetails(lineItem, beforeAdjustmentPrice, adjustedPrice, sequenceNumber, priceRecipe);
 
         // Add the newly created discount details to the profiling request's discount list
         List<DiscountDetails> discountList = new ArrayList<>(profilingRequest.getDiscountDetails());
