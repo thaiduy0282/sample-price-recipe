@@ -1,10 +1,12 @@
 package com.example.demo;
 
+import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.PriceList;
 import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
+import com.example.demo.service.CumulativeRangeService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -12,53 +14,54 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.example.demo.utils.MockDataGenerator.fetchAllRecipes;
+import static com.example.demo.utils.MockDataGenerator.*;
 
 @SpringBootApplication
 public class DemoApplication {
 
-	public static void main(String[] args) {
-
-	}
+	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 
 
-	private void executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById ) {
-		// fetching all the recipes
+	public static void main(String[] args) {}
+
+
+	public static List<DiscountDetails> executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
+		// Fetching all the recipes
 		List<PriceRecipe> recipes = fetchAllRecipes();
 
-		// sorting the priceProfileStep base on the sequence field
+		// Sorting the priceProfileStep base on the sequence field
 		steps.sort(Comparator.comparingInt(PriceProfileStep::getSequence));
-		for (PriceProfileStep step : steps) {
-			if (Objects.equals(step.getPricingMethod(), "FORMULA")) {
-				// handling the formula
-			} else if (Objects.equals(step.getPricingMethod(), "RECIPE")) {
-				// filtering the recipe from the recipes list based scope/scopeValue/priceSettings
-                List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
-										&& Objects.equals(r.getScopeValue(), step.getScopeValue())
-										&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())).toList();
 
-				// apply the recipe logic
-                for (PriceRecipe recipe : matchingRecipes) {
-					if (recipe.getPriceSetting().equals("DealMax")) {
-						// Checking for the type of the PriceSetting
-						if (recipe.getType().equals("BuyXGetY")) {
-							calculateByXGetY(recipe, profilingRequestDTO);
-						} else {
-							// handle for other type in the else clause as well
-						}
-					} else {
-						// handle for other priceSettings in the else clause as well
-					}
+		// Loop through each step in the priceProfileStep list and apply the discount based on the recipe settings and price point.
+		for (PriceProfileStep step : steps) {
+			// Filtering the recipe from the recipes list based scope/scopeValue/priceSettings/PriceApplicationOn
+			List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
+									&& Objects.equals(r.getScopeValue(), step.getScopeValue())
+									&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())
+									&& Objects.equals(r.getPriceApplicationON(), step.getPricePoint())).toList();
+
+			// Loop into each of the matching recipes and process them
+			for (PriceRecipe recipe : matchingRecipes) {
+				switch(recipe.getPriceSetting()) {
+					case "simplePricing":
+						// code block
+						break;
+					case "dealMax":
+						// code block
+						break;
+					case "buyXGetY":
+						// code block
+						break;
+					case "cumulativeRange":
+						CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
+						break;
+					default:
+						// not found type
 				}
 			}
 		}
-	}
 
-	private void calculateByXGetY(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
-		// handle logic for calculating
-
-		// Create the DiscountDetails object with the sequence number base on the sequence fo the previous object
-
-		// Append the DiscountDetails object to the profileRequestDTO object
+		// return this object for testing purpose only.
+		return profilingRequestDTO.getDiscountDetails();
 	}
 }
