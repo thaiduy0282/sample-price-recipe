@@ -48,7 +48,7 @@ public class MockDataGenerator {
     }
 
     public static ProfilingRequestDTO createDummyProfilingRequestDTO() {
-        DiscountDetails discountDetails = new DiscountDetails("Percentage", 10.0, 1000.0, 900.0, 900.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "LineItem1", 1, "Ref1", "Recipe1", "All");
+        DiscountDetails discountDetails = new DiscountDetails("%", 10.0, 1000.0, 900.0, 900.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "LineItem1", 1, "Ref1", "Recipe1", "All");
         discountDetails.setName("1000");
         ProfilingRequestDTO profilingRequestDTO = new ProfilingRequestDTO();
         profilingRequestDTO.setLineItems(fetchLineItems());

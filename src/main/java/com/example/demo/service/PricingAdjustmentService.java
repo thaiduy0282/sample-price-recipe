@@ -16,18 +16,43 @@ public class PricingAdjustmentService {
      * @param profilingRequest The request object containing a list of LineItems to be processed.
      */
     public void calculateCumulativeRange(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
-        // Group LineItems by their timeDimensionName
-        Map<String, List<LineItem>> groupedLineItems = groupLineItemsByDimension(profilingRequest.getLineItems(), priceRecipe.getRanges());
+        // Group LineItems by productId first
+        Map<String, List<LineItem>> groupedByProducts = groupLineItemsByProductId(profilingRequest.getLineItems());
 
-        // Iterate over each group of LineItems
-        for (Map.Entry<String, List<LineItem>> entry : groupedLineItems.entrySet()) {
-            String timeDimensionName = entry.getKey();
-            List<LineItem> items = entry.getValue();
-            List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
-                    .filter(r -> r.getTargetDimensionName().contains(timeDimensionName)).toList();
-            // Apply price adjustments for groups
-            applyPriceAdjustments(priceRecipe, priceRecipeRanges, items, profilingRequest);
+        // Iterate over each group of LineItems by productId
+        for (Map.Entry<String, List<LineItem>> productEntry : groupedByProducts.entrySet()) {
+            List<LineItem> productItems = productEntry.getValue();
+            // Now group the LineItems by their timeDimensionName
+            Map<String, List<LineItem>> groupedLineItems = groupLineItemsByDimension(productItems, priceRecipe.getRanges());
+
+            // Iterate over each group of LineItems by timeDimensionName
+            for (Map.Entry<String, List<LineItem>> entry : groupedLineItems.entrySet()) {
+                String timeDimensionName = entry.getKey();
+                List<LineItem> items = entry.getValue();
+                List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
+                        .filter(r -> r.getTargetDimensionName().contains(timeDimensionName)).toList();
+
+                // Apply price adjustments for groups
+                applyPriceAdjustments(priceRecipe, priceRecipeRanges, items, profilingRequest);
+            }
         }
+    }
+
+    /**
+     * Groups LineItems by their productId.
+     *
+     * @param lineItems The list of LineItems to be grouped.
+     * @return A map where the key is the productId and the value is the list of LineItems that belong to that group.
+     */
+    private Map<String, List<LineItem>> groupLineItemsByProductId(List<LineItem> lineItems) {
+        Map<String, List<LineItem>> groupedLineItems = new HashMap<>();
+
+        for (LineItem lineItem : lineItems) {
+            String productId = lineItem.getProductId();
+            groupedLineItems.computeIfAbsent(productId, k -> new ArrayList<>()).add(lineItem);
+        }
+
+        return groupedLineItems;
     }
 
     /**
@@ -173,10 +198,12 @@ public class PricingAdjustmentService {
      * @return The latest DiscountDetail for the LineItem, or null if no discount exists.
      */
     private DiscountDetails findLatestDiscountDetail(String lineItemId, String priceApplicationON, ProfilingRequestDTO profilingRequest) {
-        List<DiscountDetails> applicableDiscounts = profilingRequest.getDiscountDetails().stream()
+        List<DiscountDetails> applicableDiscounts = new ArrayList<>(profilingRequest.getDiscountDetails().stream()
                 .filter(discountDetail -> discountDetail.getLineItemId().equals(lineItemId)
                         && discountDetail.getName().equals(priceApplicationON))
-                .toList();
+                .toList());
+
+        applicableDiscounts.sort(Comparator.comparingInt(DiscountDetails::getSequence));
 
         // Return the last (latest) DiscountDetail, or null if the list is empty
         return applicableDiscounts.isEmpty() ? null : applicableDiscounts.getLast();
@@ -197,31 +224,37 @@ public class PricingAdjustmentService {
     }
 
     /**
-     * Creates a DiscountDetails object from the given parameters.
+     * Creates a DiscountDetails object based on the provided line item and pricing information.
      *
-     * @param item          The LineItem being adjusted.
-     * @param adjustedPrice The adjusted price after applying the discount or markup.
-     * @param nextSequence  The next sequence number for discount details.
-     * @param priceRecipe   The PriceRecipe containing the ID and price applied to.
-     * @return A new DiscountDetails object.
+     * @param lineItem The line item for which discount details are being created.
+     * @param adjustedPrice The adjusted price calculated after applying the discount or markup.
+     * @param sequenceNumber The sequence number for the discount details, indicating its order.
+     * @param priceRecipe The price recipe containing details about the pricing application.
+     * @return A DiscountDetails object populated with the relevant information.
      */
-    private DiscountDetails createDiscountDetails(LineItem item, double adjustedPrice, int nextSequence, PriceRecipe priceRecipe) {
-        return new DiscountDetails(
-                priceRecipe.getApplicationType(),
-                priceRecipe.getApplicationValue(),
-                Double.parseDouble(priceRecipe.getPriceApplicationON()),
-                adjustedPrice,
-                0d, // need to correct this value for real case
-                new Date().getTime(), // need to correct this value for real case
-                "Recipe", // need to correct this value for real case
-                null, // need to correct this value for real case
-                item.getProductId(),
-                item.getId(),
-                nextSequence,
-                null, // need to correct this value for real case
-                priceRecipe.getId(),
-                priceRecipe.getPriceAppliedTo()
+    private DiscountDetails createDiscountDetails(LineItem lineItem, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe) {
+        // Create a new DiscountDetails object
+        DiscountDetails discountDetails = new DiscountDetails(
+                priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
+                priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
+                Double.parseDouble(priceRecipe.getPriceApplicationON()), // Original price before adjustment
+                adjustedPrice, // The calculated adjusted price after applying discount or markup
+                0d, // Placeholder for an unspecified value; to be corrected for the real case
+                new Date().getTime(), // Timestamp of the discount application; to be corrected for the real case
+                "Recipe", // Placeholder for a more descriptive name; to be corrected for the real case
+                null, // Placeholder for a reference; to be corrected for the real case
+                lineItem.getProductId(), // The product ID from the line item
+                lineItem.getId(), // The line item ID
+                sequenceNumber, // Sequence number to determine the order of discount details
+                null, // Placeholder for additional information; to be corrected for the real case
+                priceRecipe.getId(), // ID of the price recipe
+                priceRecipe.getPriceAppliedTo() // The target of the price application (e.g., product or service)
         );
+
+        // Set the name of the discount details based on the price application's original price
+        discountDetails.setName(priceRecipe.getPriceApplicationON());
+
+        return discountDetails; // Return the populated DiscountDetails object
     }
 
     /**
