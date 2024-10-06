@@ -48,10 +48,12 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
         discountDetails.setAdjustmentValue(recipe.getApplicationValue());
         discountDetails.setAppliedOnAmount(originalPrice);
         discountDetails.setAfterAdjustment(adjustedPrice);
-//            discountDetails.setDiscountSource();
+        discountDetails.setDiscountSource("RECIPE");
         discountDetails.setProductConfigurationId(item.getModel());
         discountDetails.setLineItemId(String.valueOf(item.getId()));
-        discountDetails.setSequence(discountDetailsList.size() + 1);
+        discountDetails.setSequence(
+                discountDetailsList.isEmpty() ? 1 : discountDetailsList.getLast().getSequence() + 1
+        );
         discountDetails.setRecipeId(String.valueOf(recipe.getId()));
         discountDetails.setAppliedTo(recipe.getPriceAppliedTo());
 

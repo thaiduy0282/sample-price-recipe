@@ -6,6 +6,7 @@ import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.services.pricingstrategy.impl.SimplePricingOneOffStrategy;
 import com.example.demo.utils.FormulaEvaluator;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -20,15 +21,20 @@ import static org.mockito.ArgumentMatchers.any;
 class SimplePricingOneOffStrategyTest {
 
     private SimplePricingOneOffStrategy pricingStrategy;
+    private MockedStatic<FormulaEvaluator> mockedStatic;
 
     @BeforeEach
     public void setUp() {
-
         pricingStrategy = new SimplePricingOneOffStrategy();
-
-        MockedStatic<FormulaEvaluator> mockedStatic = Mockito.mockStatic(FormulaEvaluator.class);
-        // Mocking evaluateFormula to always return true regardless of inputs
+        mockedStatic = Mockito.mockStatic(FormulaEvaluator.class);
         mockedStatic.when(() -> FormulaEvaluator.evaluateFormula(any(), any())).thenReturn(true);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (mockedStatic != null) {
+            mockedStatic.close();
+        }
     }
 
     @Test
