@@ -78,15 +78,14 @@ public class MockDataGenerator {
         List<PriceRecipe> recipes = new ArrayList<>();
 
         PriceRecipe recipe1 = new PriceRecipe();
-        recipe1.setScope("Product");
-        recipe1.setScopeValue("Product123");
-        recipe1.setPriceSetting("CumulativeRange");
-        recipe1.setType("BuyXGetY");
-        recipe1.setPriceApplicationON("1000");
+        recipe1.setScope("Quote");
+        recipe1.setScopeValue("quote1");
+        recipe1.setPriceSetting("cumulativeRange");
+        recipe1.setPriceApplicationON("PriceList");
 
         PriceRecipeRange range = new PriceRecipeRange();
-        range.setStartTier(500);
-        range.setEndTier(1000);
+        range.setStartTier(25);
+        range.setEndTier(75);
         range.setDealStrategy("discount");
         range.setApplicationType("%");
         range.setApplicationValue("10");
@@ -95,6 +94,25 @@ public class MockDataGenerator {
 
         recipe1.setRanges(List.of(range));
         recipes.add(recipe1);
+
+
+        PriceRecipe recipe2 = new PriceRecipe();
+        recipe2.setScope("Quote");
+        recipe2.setScopeValue("quote2");
+        recipe2.setPriceSetting("cumulativeRange");
+        recipe2.setPriceApplicationON("PriceList");
+
+        PriceRecipeRange range2 = new PriceRecipeRange();
+        range2.setStartTier(25);
+        range2.setEndTier(75);
+        range2.setDealStrategy("discount");
+        range2.setApplicationType("%");
+        range2.setApplicationValue("15");
+        range2.setSourceDimensionName(List.of("2024"));
+        range2.setTargetDimensionName(List.of("2025,2026"));
+
+        recipe2.setRanges(List.of(range2));
+        recipes.add(recipe2);
 
         return recipes;
     }

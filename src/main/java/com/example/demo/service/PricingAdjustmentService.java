@@ -206,7 +206,7 @@ public class PricingAdjustmentService {
         applicableDiscounts.sort(Comparator.comparingInt(DiscountDetails::getSequence));
 
         // Return the last (latest) DiscountDetail, or null if the list is empty
-        return applicableDiscounts.isEmpty() ? null : applicableDiscounts.getLast();
+        return applicableDiscounts.isEmpty() ? null : applicableDiscounts.get(applicableDiscounts.size() - 1);
     }
 
     /**
@@ -218,7 +218,7 @@ public class PricingAdjustmentService {
      */
     private int getNextDiscountSequence(ProfilingRequestDTO profilingRequest) {
         if (profilingRequest.getDiscountDetails() != null && !profilingRequest.getDiscountDetails().isEmpty()) {
-            return profilingRequest.getDiscountDetails().getLast().getSequence() + 1;
+            return profilingRequest.getDiscountDetails().get(profilingRequest.getDiscountDetails().size() - 1).getSequence() + 1;
         }
         return 0; // Default to 0 if no discount details exist
     }
@@ -237,7 +237,7 @@ public class PricingAdjustmentService {
         DiscountDetails discountDetails = new DiscountDetails(
                 priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
                 priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
-                Double.parseDouble(priceRecipe.getPriceApplicationON()), // Original price before adjustment
+                0d, // Original price before adjustment
                 adjustedPrice, // The calculated adjusted price after applying discount or markup
                 0d, // Placeholder for an unspecified value; to be corrected for the real case
                 new Date().getTime(), // Timestamp of the discount application; to be corrected for the real case

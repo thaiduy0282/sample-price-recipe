@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.PriceList;
 import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
@@ -23,26 +24,26 @@ public class DemoApplication {
 
 
 	public static void main(String[] args) {
-		List<PriceProfileStep> steps = createDummyPriceProfileSteps();
-		ProfilingRequestDTO profilingRequestDTO = createDummyProfilingRequestDTO();
-		Map<String, List<PriceListItem>> priceListItemMap = createDummyPriceListItemMap();
-		Map<String, List<PriceList>> priceListById = createDummyPriceListByIdMap();
-		executeVolume(steps, profilingRequestDTO, priceListItemMap, priceListById);
-
-		Assert.isTrue(profilingRequestDTO.getDiscountDetails().getLast().getAfterAdjustment() == 810, "Price must be discounted 10%");
+//		List<PriceProfileStep> steps = createDummyPriceProfileSteps();
+//		ProfilingRequestDTO profilingRequestDTO = createDummyProfilingRequestDTO();
+//		Map<String, List<PriceListItem>> priceListItemMap = createDummyPriceListItemMap();
+//		Map<String, List<PriceList>> priceListById = createDummyPriceListByIdMap();
+//		executeVolume(steps, profilingRequestDTO, priceListItemMap, priceListById);
+//
+//		Assert.isTrue(profilingRequestDTO.getDiscountDetails().getLast().getAfterAdjustment() == 810, "Price must be discounted 10%");
 	}
 
 
-	private static void executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
+	public static List<DiscountDetails> executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
 		// fetching all the recipes
 		List<PriceRecipe> recipes = fetchAllRecipes();
 
 		// sorting the priceProfileStep base on the sequence field
 		steps.sort(Comparator.comparingInt(PriceProfileStep::getSequence));
 		for (PriceProfileStep step : steps) {
-			if (Objects.equals(step.getPricingMethod(), "FORMULA")) {
+			if (Objects.equals(step.getPricingMethod(), "formula")) {
 				// handling the formula
-			} else if (Objects.equals(step.getPricingMethod(), "RECIPE")) {
+			} else if (Objects.equals(step.getPricingMethod(), "recipe")) {
 				// filtering the recipe from the recipes list based scope/scopeValue/priceSettings
                 List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
 										&& Objects.equals(r.getScopeValue(), step.getScopeValue())
@@ -57,7 +58,7 @@ public class DemoApplication {
 						} else {
 							// handle for other type in the else clause as well
 						}
-					} else if (recipe.getPriceSetting().equals("CumulativeRange")) {
+					} else if (recipe.getPriceSetting().equals("cumulativeRange")) {
 						pricingAdjustmentService.calculateCumulativeRange(recipe, profilingRequestDTO);
 					}
 					else {
@@ -66,6 +67,8 @@ public class DemoApplication {
 				}
 			}
 		}
+
+		return profilingRequestDTO.getDiscountDetails();
 	}
 
 	private static void calculateByXGetY(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
