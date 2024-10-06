@@ -32,8 +32,7 @@ public class PricingAdjustmentService {
                 List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
                         .filter(r -> r.getTargetDimensionName().contains(timeDimensionName)).toList();
 
-                // Apply price adjustments for groups
-                applyPriceAdjustments(priceRecipe, priceRecipeRanges, items, profilingRequest);
+                applyAdjustmentsToLineItems(priceRecipeRanges.get(priceRecipeRanges.size() - 1), items, profilingRequest, priceRecipe);
             }
         }
     }
@@ -126,22 +125,6 @@ public class PricingAdjustmentService {
      */
     private boolean isTotalQuantityInRange(double totalQuantity, PriceRecipeRange range) {
         return totalQuantity >= range.getStartTier() && totalQuantity <= range.getEndTier();
-    }
-
-
-    /**
-     * Applies price adjustments (discount/markup) to the grouped LineItems
-     *
-     * @param priceRecipe      The PriceRecipe containing price adjustment rules.
-     * @param priceRecipeRanges List of PriceRecipeRange objects defining the grouping criteria.
-     * @param items            The list of LineItems that belong to the current group.
-     * @param profilingRequest  The request object containing discount details.
-     */
-    private void applyPriceAdjustments(PriceRecipe priceRecipe, List<PriceRecipeRange> priceRecipeRanges, List<LineItem> items, ProfilingRequestDTO profilingRequest) {
-        // Check each PriceRecipeRange to see if it matches the quantity criteria
-        for (PriceRecipeRange range : priceRecipeRanges) {
-            applyAdjustmentsToLineItems(range, items, profilingRequest, priceRecipe);
-        }
     }
 
     /**
