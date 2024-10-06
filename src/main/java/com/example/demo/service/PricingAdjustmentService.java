@@ -179,7 +179,7 @@ public class PricingAdjustmentService {
                 );
 
                 // Determine the next sequence number for the discount
-                int nextSequence = getNextDiscountSequence(profilingRequest);
+                int nextSequence = latestDiscount.getSequence() + 1;
 
                 // Create and add a new DiscountDetails entry to the profiling request
                 List<DiscountDetails> discountDetails = new ArrayList<>(profilingRequest.getDiscountDetails());
@@ -207,20 +207,6 @@ public class PricingAdjustmentService {
 
         // Return the last (latest) DiscountDetail, or null if the list is empty
         return applicableDiscounts.isEmpty() ? null : applicableDiscounts.get(applicableDiscounts.size() - 1);
-    }
-
-    /**
-     * Retrieves the next sequence number for discount details,
-     * returning 0 if no discount details exist.
-     *
-     * @param profilingRequest The request object containing discount details.
-     * @return The next sequence number.
-     */
-    private int getNextDiscountSequence(ProfilingRequestDTO profilingRequest) {
-        if (profilingRequest.getDiscountDetails() != null && !profilingRequest.getDiscountDetails().isEmpty()) {
-            return profilingRequest.getDiscountDetails().get(profilingRequest.getDiscountDetails().size() - 1).getSequence() + 1;
-        }
-        return 0; // Default to 0 if no discount details exist
     }
 
     /**
