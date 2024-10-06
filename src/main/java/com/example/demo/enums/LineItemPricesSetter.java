@@ -4,7 +4,7 @@ import com.example.demo.models.LineItem;
 import lombok.Getter;
 
 import java.util.Arrays;
-import java.util.function.BiConsumer;
+import java.util.function.ObjDoubleConsumer;
 
 @Getter
 public enum LineItemPricesSetter {
@@ -15,14 +15,14 @@ public enum LineItemPricesSetter {
     UNIT_PRICE("unitPrice", LineItem::setUnitPrice);
 
     private final String fieldName;
-    private final BiConsumer<LineItem, Double> setter;
+    private final ObjDoubleConsumer<LineItem> setter;
 
-    LineItemPricesSetter(String fieldName, BiConsumer<LineItem, Double> setter) {
+    LineItemPricesSetter(String fieldName, ObjDoubleConsumer<LineItem> setter) {
         this.fieldName = fieldName;
         this.setter = setter;
     }
 
-    public static BiConsumer<LineItem, Double> getSetterByFieldName(String fieldName) {
+    public static ObjDoubleConsumer<LineItem> getSetterByFieldName(String fieldName) {
         return Arrays.stream(LineItemPricesSetter.values())
                 .filter(mapping -> mapping.getFieldName().equals(fieldName))
                 .findFirst()
