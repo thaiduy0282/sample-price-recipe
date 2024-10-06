@@ -145,15 +145,52 @@ public class PricingAdjustmentService {
     }
 
     /**
-     * Applies price adjustments to the provided list of LineItems based on the given PriceRecipeRange and profiling request details.
+     * Creates a new DiscountDetails entry based on the provided line item, latest discount, adjusted price, and sequence,
+     * and adds it to the ProfilingRequestDTO's discount details list.
      *
-     * This method ensures that each LineItem is evaluated for applicable discounts, calculates the adjusted price, and adds
-     * a new DiscountDetails entry to the profiling request.
+     * @param lineItem          The current LineItem for which discount adjustments are being applied.
+     * @param beforeAdjustmentPrice   Original price before adjustment.
+     * @param adjustedPrice     The newly calculated adjusted price based on the price recipe range.
+     * @param sequenceNumber      The sequence number for the new DiscountDetails entry.
+     * @param priceRecipe       The PriceRecipe object containing discount application details.
+     * @param profilingRequest  The ProfilingRequestDTO where the DiscountDetails entry will be added.
+     */
+    private void createAndAddDiscountDetails(LineItem lineItem, double beforeAdjustmentPrice, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
+        // Create a new DiscountDetails object with the necessary parameters
+        DiscountDetails discountDetails = new DiscountDetails(
+                priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
+                priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
+                beforeAdjustmentPrice, // Original price before adjustment
+                adjustedPrice, // The calculated adjusted price after applying discount or markup
+                0d, // Placeholder for an unspecified value; to be corrected for the real case
+                new Date().getTime(), // Timestamp of the discount application; to be corrected for the real case
+                "Recipe", // Placeholder for a more descriptive name; to be corrected for the real case
+                null, // Placeholder for a reference; to be corrected for the real case
+                lineItem.getProductId(), // The product ID from the line item
+                lineItem.getId(), // The line item ID
+                sequenceNumber, // Sequence number to determine the order of discount details
+                null, // Placeholder for additional information; to be corrected for the real case
+                priceRecipe.getId(), // ID of the price recipe
+                priceRecipe.getPriceAppliedTo() // The target of the price application (e.g., product or service)
+        );
+
+        // Optionally set the name of the discount using price application ON
+        discountDetails.setName(priceRecipe.getPriceApplicationON());
+
+        // Add the newly created discount details to the profiling request's discount list
+        List<DiscountDetails> discountList = new ArrayList<>(profilingRequest.getDiscountDetails());
+        discountList.add(discountDetails);
+        profilingRequest.setDiscountDetails(discountList);
+    }
+
+    /**
+     * Applies adjustments to the provided LineItems based on the PriceRecipeRange and updates the ProfilingRequestDTO
+     * with new DiscountDetails entries.
      *
-     * @param priceRecipeRange    The PriceRecipeRange that defines the deal strategy, application type, and value.
-     * @param lineItems           The list of LineItems that require adjustments.
-     * @param profilingRequest    The ProfilingRequestDTO containing the discount details for the request.
-     * @param priceRecipe         The PriceRecipe object which holds the rules for pricing application.
+     * @param priceRecipeRange  The range defining how discounts should be applied.
+     * @param lineItems         A list of LineItem objects representing the items being processed.
+     * @param profilingRequest  The profiling request data object where discount details are stored.
+     * @param priceRecipe       The price recipe containing discount application details.
      */
     private void applyAdjustmentsToLineItems(PriceRecipeRange priceRecipeRange, List<LineItem> lineItems, ProfilingRequestDTO profilingRequest, PriceRecipe priceRecipe) {
         // Initialize the discount details list if it's null
@@ -182,9 +219,7 @@ public class PricingAdjustmentService {
                 int nextSequence = latestDiscount.getSequence() + 1;
 
                 // Create and add a new DiscountDetails entry to the profiling request
-                List<DiscountDetails> discountDetails = new ArrayList<>(profilingRequest.getDiscountDetails());
-                discountDetails.add(createDiscountDetails(lineItem, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe));
-                profilingRequest.setDiscountDetails(discountDetails);
+                createAndAddDiscountDetails(lineItem, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe, profilingRequest);
             }
         }
     }
