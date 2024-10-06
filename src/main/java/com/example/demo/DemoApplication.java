@@ -6,9 +6,8 @@ import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.service.PricingAdjustmentService;
+import com.example.demo.service.CumulativeRangeService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.util.Assert;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,7 +19,7 @@ import static com.example.demo.utils.MockDataGenerator.*;
 @SpringBootApplication
 public class DemoApplication {
 
-	private static final PricingAdjustmentService pricingAdjustmentService = new PricingAdjustmentService();
+	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 
 
 	public static void main(String[] args) {}
@@ -54,7 +53,7 @@ public class DemoApplication {
 						// code block
 						break;
 					case "cumulativeRange":
-						pricingAdjustmentService.calculateCumulativeRange(recipe, profilingRequestDTO);
+						CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
 						break;
 					default:
 						// not found type

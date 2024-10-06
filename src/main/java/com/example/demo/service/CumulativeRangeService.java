@@ -6,7 +6,7 @@ import java.util.*;
 /**
  * This class is responsible for processing pricing adjustments for LineItems based on specific rules defined in PriceRecipe.
  */
-public class PricingAdjustmentService {
+public class CumulativeRangeService {
     /**
      * Calculates cumulative price adjustments for each group of LineItems based on their timeDimensionName.
      * If the timeDimensionName matches the sourceDimensionName in the PriceRecipeRange and the total quantity
@@ -22,17 +22,18 @@ public class PricingAdjustmentService {
         // Iterate over each group of LineItems by productId
         for (Map.Entry<String, List<LineItem>> productEntry : groupedByProducts.entrySet()) {
             List<LineItem> productItems = productEntry.getValue();
+
+            // Focus on the last range only
+            PriceRecipeRange recipeRange = priceRecipe.getRanges().get(priceRecipe.getRanges().size() - 1);
+
             // Now group the LineItems by their timeDimensionName
-            Map<String, List<LineItem>> groupedLineItems = groupLineItemsByDimension(productItems, priceRecipe.getRanges());
+            Map<String, List<LineItem>> groupedLineItems = groupLineItemsByDimension(productItems, recipeRange);
 
             // Iterate over each group of LineItems by timeDimensionName
             for (Map.Entry<String, List<LineItem>> entry : groupedLineItems.entrySet()) {
-                String timeDimensionName = entry.getKey();
                 List<LineItem> items = entry.getValue();
-                List<PriceRecipeRange> priceRecipeRanges = priceRecipe.getRanges().stream()
-                        .filter(r -> r.getTargetDimensionName().contains(timeDimensionName)).toList();
 
-                applyAdjustmentsToLineItems(priceRecipeRanges.get(priceRecipeRanges.size() - 1), items, profilingRequest, priceRecipe);
+                applyAdjustmentsToLineItems(recipeRange, items, profilingRequest, priceRecipe);
             }
         }
     }
@@ -62,33 +63,30 @@ public class PricingAdjustmentService {
      * @param priceRecipeRanges The list of PriceRecipeRange objects defining the grouping criteria.
      * @return A map where the key is the target dimension name and the value is the list of LineItems that belong to that group.
      */
-    private Map<String, List<LineItem>> groupLineItemsByDimension(List<LineItem> lineItems, List<PriceRecipeRange> priceRecipeRanges) {
+    private Map<String, List<LineItem>> groupLineItemsByDimension(List<LineItem> lineItems, PriceRecipeRange priceRecipeRange) {
         Map<String, List<LineItem>> groupedLineItems = new HashMap<>();
 
-        // Iterate over each PriceRecipeRange to determine how to group LineItems
-        for (PriceRecipeRange range : priceRecipeRanges) {
-            // Get the source dimension names to group the LineItems
-            List<String> sourceDimensionNames = range.getSourceDimensionName();
+        // Get the source dimension names to group the LineItems
+        List<String> sourceDimensionNames = priceRecipeRange.getSourceDimensionName();
 
-            // Get the target dimension names to group the LineItems
-            List<String> targetDimensionNames = range.getTargetDimensionName();
+        // Get the target dimension names to group the LineItems
+        List<String> targetDimensionNames = priceRecipeRange.getTargetDimensionName();
 
-            if (sourceDimensionNames == null || targetDimensionNames == null) {
-                continue;
-            }
+        if (sourceDimensionNames == null || targetDimensionNames == null) {
+            return groupedLineItems;
+        }
 
-            // Group the LineItems by source dimension names
-            Map<String, List<LineItem>> tempGroupedItems = filterLineItemsByDimensions(lineItems, sourceDimensionNames);
+        // Group the LineItems by source dimension names
+        Map<String, List<LineItem>> tempGroupedItems = filterLineItemsByDimensions(lineItems, sourceDimensionNames);
 
-            // Process each group to determine if it meets the total quantity condition
-            for (Map.Entry<String, List<LineItem>> entry : tempGroupedItems.entrySet()) {
-                List<LineItem> itemsInGroup = entry.getValue();
-                double totalQuantity = calculateTotalQuantity(itemsInGroup);
+        // Process each group to determine if it meets the total quantity condition
+        for (Map.Entry<String, List<LineItem>> entry : tempGroupedItems.entrySet()) {
+            List<LineItem> itemsInGroup = entry.getValue();
+            double totalQuantity = calculateTotalQuantity(itemsInGroup);
 
-                // If the total quantity is within the specified tier range, group the items by the target dimension name
-                if (isTotalQuantityInRange(totalQuantity, range)) {
-                    groupedLineItems.putAll(filterLineItemsByDimensions(lineItems, targetDimensionNames));
-                }
+            // If the total quantity is within the specified tier range, group the items by the target dimension name
+            if (isTotalQuantityInRange(totalQuantity, priceRecipeRange)) {
+                groupedLineItems.putAll(filterLineItemsByDimensions(lineItems, targetDimensionNames));
             }
         }
 
@@ -219,10 +217,15 @@ public class PricingAdjustmentService {
      * @return A DiscountDetails object populated with the relevant information.
      */
     private DiscountDetails createDiscountDetails(LineItem lineItem, double beforeAdjustmentPrice, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe) {
+        // Get the adjustment details
+        List<PriceRecipeRange> ranges = priceRecipe.getRanges();
+        String applicationType = ranges.isEmpty() ? priceRecipe.getApplicationType() : ranges.get(ranges.size() - 1).getApplicationType();
+        Double applicationValue = ranges.isEmpty() ? priceRecipe.getApplicationValue() : Double.parseDouble(ranges.get(ranges.size() - 1).getApplicationValue());
+
         // Create a new DiscountDetails object
         DiscountDetails discountDetails = new DiscountDetails(
-                priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
-                priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
+                applicationType, // Type of application (Discount/Markup)
+                applicationValue, // Value applied (e.g., percentage or amount)
                 beforeAdjustmentPrice, // Original price before adjustment
                 adjustedPrice, // The calculated adjusted price after applying discount or markup
                 0d, // Placeholder for an unspecified value; to be corrected for the real case

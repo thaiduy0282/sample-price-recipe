@@ -108,16 +108,13 @@ public class MockDataGenerator {
         recipe2.setPriceSetting("cumulativeRange");
         recipe2.setPriceApplicationON("ReferencePrice");
         recipe2.setPriceAppliedTo("ContractPrice");
-        recipe2.setDealStrategy("discount");
-        recipe2.setApplicationType("Percentage");
-        recipe2.setApplicationValue(10);
 
         PriceRecipeRange range2 = new PriceRecipeRange();
         range2.setStartTier(25);
         range2.setEndTier(75);
         range2.setDealStrategy("discount");
         range2.setApplicationType("Percentage");
-        range2.setApplicationValue("15");
+        range2.setApplicationValue("30");
         range2.setSourceDimensionName(List.of("2024"));
         range2.setTargetDimensionName(List.of("2025", "2026"));
 

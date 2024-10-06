@@ -1,7 +1,7 @@
 package com.example.demo;
 
 import com.example.demo.models.*;
-import com.example.demo.service.PricingAdjustmentService;
+import com.example.demo.service.CumulativeRangeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,14 +10,14 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PricingAdjustmentServiceTest {
-    private PricingAdjustmentService pricingAdjustmentService;
+public class CumulativeRangeServiceTest {
+    private CumulativeRangeService cumulativeRangeService;
     private PriceRecipe priceRecipe;
     private ProfilingRequestDTO profilingRequest;
 
     @BeforeEach
     public void setUp() {
-        pricingAdjustmentService = new PricingAdjustmentService();
+        cumulativeRangeService = new CumulativeRangeService();
         priceRecipe = new PriceRecipe();
         profilingRequest = new ProfilingRequestDTO();
     }
@@ -66,7 +66,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(2, profilingRequest.getDiscountDetails().size());
@@ -118,7 +118,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(2, profilingRequest.getDiscountDetails().size());
@@ -170,7 +170,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(2, profilingRequest.getDiscountDetails().size());
@@ -222,7 +222,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(2, profilingRequest.getDiscountDetails().size());
@@ -275,7 +275,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(1, profilingRequest.getDiscountDetails().size());
@@ -326,7 +326,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(1, profilingRequest.getDiscountDetails().size());
@@ -381,7 +381,7 @@ public class PricingAdjustmentServiceTest {
         profilingRequest.setDiscountDetails(List.of(discount));
 
 
-        pricingAdjustmentService.calculateCumulativeRange(priceRecipe, profilingRequest);
+        cumulativeRangeService.calculateCumulativeRange(priceRecipe, profilingRequest);
 
 
         assertEquals(3, profilingRequest.getDiscountDetails().size());
