@@ -43,19 +43,19 @@ class DemoApplicationTests {
 		DiscountDetails discountDetails1 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.1", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails1.setName("ListPrice");
 
-		DiscountDetails discountDetails2 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.1", 2, "Ref1", "Recipe1", "ListPrice");
+		DiscountDetails discountDetails2 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.1", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails2.setName("ListPrice");
 
-		DiscountDetails discountDetails3 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-3.1", 3, "Ref1", "Recipe1", "ListPrice");
+		DiscountDetails discountDetails3 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-3.1", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails3.setName("ListPrice");
 
 		DiscountDetails discountDetails4 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.2", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails1.setName("ListPrice");
 
-		DiscountDetails discountDetails5 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.3", 2, "Ref1", "Recipe1", "ListPrice");
+		DiscountDetails discountDetails5 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.3", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails2.setName("ListPrice");
 
-		DiscountDetails discountDetails6 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.2", 3, "Ref1", "Recipe1", "ListPrice");
+		DiscountDetails discountDetails6 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.2", 1, "Ref1", "Recipe1", "ListPrice");
 		discountDetails6.setName("ListPrice");
 
 		return List.of(

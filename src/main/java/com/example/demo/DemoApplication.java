@@ -23,60 +23,46 @@ public class DemoApplication {
 	private static final PricingAdjustmentService pricingAdjustmentService = new PricingAdjustmentService();
 
 
-	public static void main(String[] args) {
-//		List<PriceProfileStep> steps = createDummyPriceProfileSteps();
-//		ProfilingRequestDTO profilingRequestDTO = createDummyProfilingRequestDTO();
-//		Map<String, List<PriceListItem>> priceListItemMap = createDummyPriceListItemMap();
-//		Map<String, List<PriceList>> priceListById = createDummyPriceListByIdMap();
-//		executeVolume(steps, profilingRequestDTO, priceListItemMap, priceListById);
-//
-//		Assert.isTrue(profilingRequestDTO.getDiscountDetails().getLast().getAfterAdjustment() == 810, "Price must be discounted 10%");
-	}
+	public static void main(String[] args) {}
 
 
 	public static List<DiscountDetails> executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
-		// fetching all the recipes
+		// Fetching all the recipes
 		List<PriceRecipe> recipes = fetchAllRecipes();
 
-		// sorting the priceProfileStep base on the sequence field
+		// Sorting the priceProfileStep base on the sequence field
 		steps.sort(Comparator.comparingInt(PriceProfileStep::getSequence));
-		for (PriceProfileStep step : steps) {
-			if (Objects.equals(step.getPricingMethod(), "formula")) {
-				// handling the formula
-			} else if (Objects.equals(step.getPricingMethod(), "recipe")) {
-				// filtering the recipe from the recipes list based scope/scopeValue/priceSettings
-                List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
-										&& Objects.equals(r.getScopeValue(), step.getScopeValue())
-										&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())
-										&& Objects.equals(r.getPriceApplicationON(), step.getPricePoint())).toList();
 
-				// apply the recipe logic
-                for (PriceRecipe recipe : matchingRecipes) {
-					if (recipe.getPriceSetting().equals("DealMax")) {
-						// Checking for the type of the PriceSetting
-						if (recipe.getType().equals("BuyXGetY")) {
-							calculateByXGetY(recipe, profilingRequestDTO);
-						} else {
-							// handle for other type in the else clause as well
-						}
-					} else if (recipe.getPriceSetting().equals("cumulativeRange")) {
+		// Loop through each step in the priceProfileStep list and apply the discount based on the recipe settings and price point.
+		for (PriceProfileStep step : steps) {
+			// Filtering the recipe from the recipes list based scope/scopeValue/priceSettings/PriceApplicationOn
+			List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
+									&& Objects.equals(r.getScopeValue(), step.getScopeValue())
+									&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())
+									&& Objects.equals(r.getPriceApplicationON(), step.getPricePoint())).toList();
+
+			// Loop into each of the matching recipes and process them
+			for (PriceRecipe recipe : matchingRecipes) {
+				switch(recipe.getPriceSetting()) {
+					case "simplePricing":
+						// code block
+						break;
+					case "dealMax":
+						// code block
+						break;
+					case "buyXGetY":
+						// code block
+						break;
+					case "cumulativeRange":
 						pricingAdjustmentService.calculateCumulativeRange(recipe, profilingRequestDTO);
-					}
-					else {
-						// handle for other priceSettings in the else clause as well
-					}
+						break;
+					default:
+						// not found type
 				}
 			}
 		}
 
+		// return this object for testing purpose only.
 		return profilingRequestDTO.getDiscountDetails();
-	}
-
-	private static void calculateByXGetY(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
-		// handle logic for calculating
-
-		// Create the DiscountDetails object with the sequence number base on the sequence fo the previous object
-
-		// Append the DiscountDetails object to the profileRequestDTO object
 	}
 }
