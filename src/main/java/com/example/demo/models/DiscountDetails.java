@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DiscountDetails  {
+public class DiscountDetails extends BaseEntity {
 
 	private static final long serialVersionUID = -6821843887490141668L;
 

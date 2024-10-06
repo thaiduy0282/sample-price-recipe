@@ -46,6 +46,13 @@ public class PricingAdjustmentService {
             // Get the source dimension names to group the LineItems
             List<String> sourceDimensionNames = range.getSourceDimensionName();
 
+            // Get the target dimension names to group the LineItems
+            List<String> targetDimensionNames = range.getTargetDimensionName();
+
+            if (sourceDimensionNames == null || targetDimensionNames == null) {
+                continue;
+            }
+
             // Group the LineItems by source dimension names
             Map<String, List<LineItem>> tempGroupedItems = filterLineItemsByDimensions(lineItems, sourceDimensionNames);
 
@@ -56,7 +63,7 @@ public class PricingAdjustmentService {
 
                 // If the total quantity is within the specified tier range, group the items by the target dimension name
                 if (isTotalQuantityInRange(totalQuantity, range)) {
-                    groupedLineItems.putAll(filterLineItemsByDimensions(lineItems, range.getTargetDimensionName()));
+                    groupedLineItems.putAll(filterLineItemsByDimensions(lineItems, targetDimensionNames));
                 }
             }
         }
@@ -113,31 +120,66 @@ public class PricingAdjustmentService {
     }
 
     /**
-     * Applies the price adjustments to each LineItem in the specified group.
+     * Applies price adjustments to the provided list of LineItems based on the given PriceRecipeRange and profiling request details.
      *
-     * @param range             The PriceRecipeRange that defines the adjustment rules.
-     * @param items             The list of LineItems to adjust.
-     * @param profilingRequest   The request object containing discount details.
-     * @param priceRecipe       The PriceRecipe containing the ID and price applied to.
+     * This method ensures that each LineItem is evaluated for applicable discounts, calculates the adjusted price, and adds
+     * a new DiscountDetails entry to the profiling request.
+     *
+     * @param priceRecipeRange    The PriceRecipeRange that defines the deal strategy, application type, and value.
+     * @param lineItems           The list of LineItems that require adjustments.
+     * @param profilingRequest    The ProfilingRequestDTO containing the discount details for the request.
+     * @param priceRecipe         The PriceRecipe object which holds the rules for pricing application.
      */
-    private void applyAdjustmentsToLineItems(PriceRecipeRange range, List<LineItem> items, ProfilingRequestDTO profilingRequest, PriceRecipe priceRecipe) {
-        for (LineItem item : items) {
-            double adjustedPrice = calculateAdjustedPrice(
-                    item.getNetPrice(), // need to correct this value for real case, Get the value from the field that AppliedTo has configured
-                    range.getDealStrategy(),
-                    range.getApplicationType(),
-                    range.getApplicationValue()
-            );
-            int nextSequence = getNextDiscountSequence(profilingRequest);
-
-            // Initialize discount details list if it's null
-            if (profilingRequest.getDiscountDetails() == null) {
-                profilingRequest.setDiscountDetails(new ArrayList<>());
-            }
-
-            // Add discount details to the profiling request
-            profilingRequest.getDiscountDetails().add(createDiscountDetails(range, item, adjustedPrice, nextSequence, priceRecipe));
+    private void applyAdjustmentsToLineItems(PriceRecipeRange priceRecipeRange, List<LineItem> lineItems, ProfilingRequestDTO profilingRequest, PriceRecipe priceRecipe) {
+        // Initialize the discount details list if it's null
+        if (profilingRequest.getDiscountDetails() == null) {
+            profilingRequest.setDiscountDetails(new ArrayList<>());
         }
+
+        // Loop through each LineItem to evaluate discounts and apply adjustments
+        for (LineItem lineItem : lineItems) {
+
+            // Get the latest discount detail for this LineItem and pricing context
+            DiscountDetails latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequest);
+
+            // Only apply adjustments if there are existing discounts
+            if (latestDiscount != null) {
+
+                // Calculate the adjusted price using the deal strategy and application details from the PriceRecipeRange
+                double adjustedPrice = calculateAdjustedPrice(
+                        latestDiscount.getAfterAdjustment(),
+                        priceRecipeRange.getDealStrategy(),
+                        priceRecipeRange.getApplicationType(),
+                        priceRecipeRange.getApplicationValue()
+                );
+
+                // Determine the next sequence number for the discount
+                int nextSequence = getNextDiscountSequence(profilingRequest);
+
+                // Create and add a new DiscountDetails entry to the profiling request
+                List<DiscountDetails> discountDetails = new ArrayList<>(profilingRequest.getDiscountDetails());
+                discountDetails.add(createDiscountDetails(lineItem, adjustedPrice, nextSequence, priceRecipe));
+                profilingRequest.setDiscountDetails(discountDetails);
+            }
+        }
+    }
+
+    /**
+     * Finds the latest DiscountDetail for the given LineItem ID and applied pricing context.
+     *
+     * @param lineItemId The ID of the LineItem to find the discount for.
+     * @param priceApplicationON The pricing context in which the discount is applied.
+     * @param profilingRequest The profiling request containing existing discount details.
+     * @return The latest DiscountDetail for the LineItem, or null if no discount exists.
+     */
+    private DiscountDetails findLatestDiscountDetail(String lineItemId, String priceApplicationON, ProfilingRequestDTO profilingRequest) {
+        List<DiscountDetails> applicableDiscounts = profilingRequest.getDiscountDetails().stream()
+                .filter(discountDetail -> discountDetail.getLineItemId().equals(lineItemId)
+                        && discountDetail.getName().equals(priceApplicationON))
+                .toList();
+
+        // Return the last (latest) DiscountDetail, or null if the list is empty
+        return applicableDiscounts.isEmpty() ? null : applicableDiscounts.getLast();
     }
 
     /**
@@ -157,14 +199,13 @@ public class PricingAdjustmentService {
     /**
      * Creates a DiscountDetails object from the given parameters.
      *
-     * @param range         The PriceRecipeRange that defines the adjustment rules.
      * @param item          The LineItem being adjusted.
      * @param adjustedPrice The adjusted price after applying the discount or markup.
      * @param nextSequence  The next sequence number for discount details.
      * @param priceRecipe   The PriceRecipe containing the ID and price applied to.
      * @return A new DiscountDetails object.
      */
-    private DiscountDetails createDiscountDetails(PriceRecipeRange range, LineItem item, double adjustedPrice, int nextSequence, PriceRecipe priceRecipe) {
+    private DiscountDetails createDiscountDetails(LineItem item, double adjustedPrice, int nextSequence, PriceRecipe priceRecipe) {
         return new DiscountDetails(
                 priceRecipe.getApplicationType(),
                 priceRecipe.getApplicationValue(),
@@ -172,7 +213,7 @@ public class PricingAdjustmentService {
                 adjustedPrice,
                 0d, // need to correct this value for real case
                 new Date().getTime(), // need to correct this value for real case
-                "Recipe / Formula", // need to correct this value for real case
+                "Recipe", // need to correct this value for real case
                 null, // need to correct this value for real case
                 item.getProductId(),
                 item.getId(),
@@ -217,42 +258,42 @@ public class PricingAdjustmentService {
     }
 
     /**
-     * Applies a discount to the net price based on the application type.
+     * Applies a discount to the price based on the application type.
      *
-     * @param netPrice The original price of the item.
+     * @param price The original price of the item.
      * @param applicationType The type of adjustment (% or Amount).
      * @param adjustmentValue The value of the adjustment (either a percentage or an amount).
      * @return The adjusted price after applying the discount.
      */
-    private double applyDiscount(double netPrice, String applicationType, double adjustmentValue) {
+    private double applyDiscount(double price, String applicationType, double adjustmentValue) {
         if ("%".equalsIgnoreCase(applicationType)) {
             // Apply percentage-based discount
-            return netPrice - (netPrice * (adjustmentValue / 100));
+            return price - (price * (adjustmentValue / 100));
         } else if ("Amount".equalsIgnoreCase(applicationType)) {
             // Apply fixed amount discount
-            return netPrice - adjustmentValue;
+            return price - adjustmentValue;
         }
         // Return the original netPrice if no valid applicationType is provided
-        return netPrice;
+        return price;
     }
 
     /**
-     * Applies a markup to the net price based on the application type.
+     * Applies a markup to the price based on the application type.
      *
-     * @param netPrice The original price of the item.
+     * @param price The original price of the item.
      * @param applicationType The type of adjustment (% or Amount).
      * @param adjustmentValue The value of the adjustment (either a percentage or an amount).
      * @return The adjusted price after applying the markup.
      */
-    private double applyMarkup(double netPrice, String applicationType, double adjustmentValue) {
+    private double applyMarkup(double price, String applicationType, double adjustmentValue) {
         if ("%".equalsIgnoreCase(applicationType)) {
             // Apply percentage-based markup
-            return netPrice + (netPrice * (adjustmentValue / 100));
+            return price + (price * (adjustmentValue / 100));
         } else if ("Amount".equalsIgnoreCase(applicationType)) {
             // Apply fixed amount markup
-            return netPrice + adjustmentValue;
+            return price + adjustmentValue;
         }
         // Return the original netPrice if no valid applicationType is provided
-        return netPrice;
+        return price;
     }
 }

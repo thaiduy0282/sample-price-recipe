@@ -5,24 +5,35 @@ import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
+import com.example.demo.service.PricingAdjustmentService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.util.Assert;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.example.demo.utils.MockDataGenerator.fetchAllRecipes;
+import static com.example.demo.utils.MockDataGenerator.*;
 
 @SpringBootApplication
 public class DemoApplication {
 
-	public static void main(String[] args) {
+	private static final PricingAdjustmentService pricingAdjustmentService = new PricingAdjustmentService();
 
+
+	public static void main(String[] args) {
+		List<PriceProfileStep> steps = createDummyPriceProfileSteps();
+		ProfilingRequestDTO profilingRequestDTO = createDummyProfilingRequestDTO();
+		Map<String, List<PriceListItem>> priceListItemMap = createDummyPriceListItemMap();
+		Map<String, List<PriceList>> priceListById = createDummyPriceListByIdMap();
+		executeVolume(steps, profilingRequestDTO, priceListItemMap, priceListById);
+
+		Assert.isTrue(profilingRequestDTO.getDiscountDetails().getLast().getAfterAdjustment() == 810, "Price must be discounted 10%");
 	}
 
 
-	private void executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById ) {
+	private static void executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
 		// fetching all the recipes
 		List<PriceRecipe> recipes = fetchAllRecipes();
 
@@ -46,7 +57,10 @@ public class DemoApplication {
 						} else {
 							// handle for other type in the else clause as well
 						}
-					} else {
+					} else if (recipe.getPriceSetting().equals("CumulativeRange")) {
+						pricingAdjustmentService.calculateCumulativeRange(recipe, profilingRequestDTO);
+					}
+					else {
 						// handle for other priceSettings in the else clause as well
 					}
 				}
@@ -54,7 +68,7 @@ public class DemoApplication {
 		}
 	}
 
-	private void calculateByXGetY(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+	private static void calculateByXGetY(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
 		// handle logic for calculating
 
 		// Create the DiscountDetails object with the sequence number base on the sequence fo the previous object
