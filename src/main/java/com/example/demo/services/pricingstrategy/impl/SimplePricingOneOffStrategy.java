@@ -10,7 +10,7 @@ import com.example.demo.utils.FormulaEvaluator;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.function.ObjDoubleConsumer;
 
 public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
 
@@ -73,8 +73,9 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
         }
     }
 
+
     private void setFieldValueByReflection(LineItem item, String fieldName, double value) {
-        BiConsumer<LineItem, Double> setter = LineItemPricesSetter.getSetterByFieldName(fieldName);
+        ObjDoubleConsumer<LineItem> setter = LineItemPricesSetter.getSetterByFieldName(fieldName);
         setter.accept(item, value);
     }
 
