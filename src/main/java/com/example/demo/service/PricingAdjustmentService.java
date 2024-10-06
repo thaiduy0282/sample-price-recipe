@@ -183,7 +183,7 @@ public class PricingAdjustmentService {
 
                 // Create and add a new DiscountDetails entry to the profiling request
                 List<DiscountDetails> discountDetails = new ArrayList<>(profilingRequest.getDiscountDetails());
-                discountDetails.add(createDiscountDetails(lineItem, adjustedPrice, nextSequence, priceRecipe));
+                discountDetails.add(createDiscountDetails(lineItem, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe));
                 profilingRequest.setDiscountDetails(discountDetails);
             }
         }
@@ -232,12 +232,12 @@ public class PricingAdjustmentService {
      * @param priceRecipe The price recipe containing details about the pricing application.
      * @return A DiscountDetails object populated with the relevant information.
      */
-    private DiscountDetails createDiscountDetails(LineItem lineItem, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe) {
+    private DiscountDetails createDiscountDetails(LineItem lineItem, double beforeAdjustmentPrice, double adjustedPrice, int sequenceNumber, PriceRecipe priceRecipe) {
         // Create a new DiscountDetails object
         DiscountDetails discountDetails = new DiscountDetails(
                 priceRecipe.getApplicationType(), // Type of application (Discount/Markup)
                 priceRecipe.getApplicationValue(), // Value applied (e.g., percentage or amount)
-                0d, // Original price before adjustment
+                beforeAdjustmentPrice, // Original price before adjustment
                 adjustedPrice, // The calculated adjusted price after applying discount or markup
                 0d, // Placeholder for an unspecified value; to be corrected for the real case
                 new Date().getTime(), // Timestamp of the discount application; to be corrected for the real case
@@ -252,7 +252,7 @@ public class PricingAdjustmentService {
         );
 
         // Set the name of the discount details based on the price application's original price
-        discountDetails.setName(priceRecipe.getPriceApplicationON());
+        discountDetails.setName(priceRecipe.getPriceAppliedTo());
 
         return discountDetails; // Return the populated DiscountDetails object
     }
@@ -299,7 +299,7 @@ public class PricingAdjustmentService {
      * @return The adjusted price after applying the discount.
      */
     private double applyDiscount(double price, String applicationType, double adjustmentValue) {
-        if ("%".equalsIgnoreCase(applicationType)) {
+        if ("Percentage".equalsIgnoreCase(applicationType)) {
             // Apply percentage-based discount
             return price - (price * (adjustmentValue / 100));
         } else if ("Amount".equalsIgnoreCase(applicationType)) {
@@ -319,7 +319,7 @@ public class PricingAdjustmentService {
      * @return The adjusted price after applying the markup.
      */
     private double applyMarkup(double price, String applicationType, double adjustmentValue) {
-        if ("%".equalsIgnoreCase(applicationType)) {
+        if ("Percentage".equalsIgnoreCase(applicationType)) {
             // Apply percentage-based markup
             return price + (price * (adjustmentValue / 100));
         } else if ("Amount".equalsIgnoreCase(applicationType)) {

@@ -47,7 +47,8 @@ public class DemoApplication {
 				// filtering the recipe from the recipes list based scope/scopeValue/priceSettings
                 List<PriceRecipe> matchingRecipes = recipes.stream().filter(r -> Objects.equals(r.getScope(), step.getScope())
 										&& Objects.equals(r.getScopeValue(), step.getScopeValue())
-										&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())).toList();
+										&& Objects.equals(r.getPriceSetting(), step.getPriceSetting())
+										&& Objects.equals(r.getPriceApplicationON(), step.getPricePoint())).toList();
 
 				// apply the recipe logic
                 for (PriceRecipe recipe : matchingRecipes) {

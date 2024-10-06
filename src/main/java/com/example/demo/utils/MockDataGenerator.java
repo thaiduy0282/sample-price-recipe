@@ -78,16 +78,21 @@ public class MockDataGenerator {
         List<PriceRecipe> recipes = new ArrayList<>();
 
         PriceRecipe recipe1 = new PriceRecipe();
+        recipe1.setId("028da1d3-40d8-45b1-a9db-ff7f58fc4ff5");
         recipe1.setScope("Quote");
         recipe1.setScopeValue("quote1");
         recipe1.setPriceSetting("cumulativeRange");
-        recipe1.setPriceApplicationON("PriceList");
+        recipe1.setPriceApplicationON("ListPrice");
+        recipe1.setPriceAppliedTo("ReferencePrice");
+        recipe1.setDealStrategy("discount");
+        recipe1.setApplicationType("Percentage");
+        recipe1.setApplicationValue(10);
 
         PriceRecipeRange range = new PriceRecipeRange();
         range.setStartTier(25);
         range.setEndTier(75);
         range.setDealStrategy("discount");
-        range.setApplicationType("%");
+        range.setApplicationType("Percentage");
         range.setApplicationValue("10");
         range.setSourceDimensionName(List.of("2024"));
         range.setTargetDimensionName(List.of("2025"));
@@ -97,19 +102,24 @@ public class MockDataGenerator {
 
 
         PriceRecipe recipe2 = new PriceRecipe();
+        recipe2.setId("b1eb5034-ff19-4709-a5e9-c96a66df02e6");
         recipe2.setScope("Quote");
-        recipe2.setScopeValue("quote2");
+        recipe2.setScopeValue("quote1");
         recipe2.setPriceSetting("cumulativeRange");
-        recipe2.setPriceApplicationON("PriceList");
+        recipe2.setPriceApplicationON("ReferencePrice");
+        recipe2.setPriceAppliedTo("ContractPrice");
+        recipe2.setDealStrategy("discount");
+        recipe2.setApplicationType("Percentage");
+        recipe2.setApplicationValue(10);
 
         PriceRecipeRange range2 = new PriceRecipeRange();
         range2.setStartTier(25);
         range2.setEndTier(75);
         range2.setDealStrategy("discount");
-        range2.setApplicationType("%");
+        range2.setApplicationType("Percentage");
         range2.setApplicationValue("15");
         range2.setSourceDimensionName(List.of("2024"));
-        range2.setTargetDimensionName(List.of("2025,2026"));
+        range2.setTargetDimensionName(List.of("2025", "2026"));
 
         recipe2.setRanges(List.of(range2));
         recipes.add(recipe2);

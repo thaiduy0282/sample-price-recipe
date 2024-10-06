@@ -40,27 +40,45 @@ class DemoApplicationTests {
 	}
 
 	private List<DiscountDetails> initDiscountDetails() {
-		DiscountDetails discountDetails1 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1", 1, "Ref1", "Recipe1", "All");
-		discountDetails1.setName("PriceList");
+		DiscountDetails discountDetails1 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.1", 1, "Ref1", "Recipe1", "ListPrice");
+		discountDetails1.setName("ListPrice");
 
-		DiscountDetails discountDetails2 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2", 2, "Ref1", "Recipe1", "All");
-		discountDetails2.setName("PriceList");
+		DiscountDetails discountDetails2 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.1", 2, "Ref1", "Recipe1", "ListPrice");
+		discountDetails2.setName("ListPrice");
 
-		DiscountDetails discountDetails3 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-3", 3, "Ref1", "Recipe1", "All");
-		discountDetails3.setName("PriceList");
+		DiscountDetails discountDetails3 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-3.1", 3, "Ref1", "Recipe1", "ListPrice");
+		discountDetails3.setName("ListPrice");
+
+		DiscountDetails discountDetails4 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.2", 1, "Ref1", "Recipe1", "ListPrice");
+		discountDetails1.setName("ListPrice");
+
+		DiscountDetails discountDetails5 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-1.3", 2, "Ref1", "Recipe1", "ListPrice");
+		discountDetails2.setName("ListPrice");
+
+		DiscountDetails discountDetails6 = new DiscountDetails("Percentage", 0.0, 1000.0, 1000.0, 0.0, System.currentTimeMillis(), "Source1", "DiscountCode1", "Config1", "lineItem-2.2", 3, "Ref1", "Recipe1", "ListPrice");
+		discountDetails6.setName("ListPrice");
 
 		return List.of(
 			discountDetails1,
 			discountDetails2,
-			discountDetails3
+			discountDetails3,
+			discountDetails4,
+			discountDetails5,
+			discountDetails6
 		);
 	}
 
 	private List<LineItem> initLineItems() {
 		List<LineItem> lineItems = List.of(
-				new LineItem("lineItem-1", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+				new LineItem("lineItem-1.1", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
 						100.0, "Configuration1", "2024", 50.0, "ProductA"),
-				new LineItem("lineItem-2", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+				new LineItem("lineItem-1.2", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+						100.0, "Configuration1", "2024", 10.0, "ProductA"),
+				new LineItem("lineItem-1.3", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+						100.0, "Configuration1", "2024", 10.0, "ProductA"),
+				new LineItem("lineItem-2.1", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+						100.0, "Configuration1", "2025", 10.0, "ProductA"),
+				new LineItem("lineItem-2.2", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
 						100.0, "Configuration1", "2025", 10.0, "ProductA"),
 				new LineItem("lineItem-3", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
 						100.0, "Configuration1", "2025", 1.0, "ProductB")
