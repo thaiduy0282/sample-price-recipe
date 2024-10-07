@@ -36,7 +36,7 @@ class DemoApplicationTests {
 		profilingRequestDTO.setProfileName("TestProfile");
 		profilingRequestDTO.setLineItems(initLineItems());
 		profilingRequestDTO.setDiscountDetails(initDiscountDetails());
-        return profilingRequestDTO;
+		return profilingRequestDTO;
 	}
 
 	private List<DiscountDetails> initDiscountDetails() {
@@ -59,12 +59,12 @@ class DemoApplicationTests {
 		discountDetails6.setName("ListPrice");
 
 		return List.of(
-			discountDetails1,
-			discountDetails2,
-			discountDetails3,
-			discountDetails4,
-			discountDetails5,
-			discountDetails6
+				discountDetails1,
+				discountDetails2,
+				discountDetails3,
+				discountDetails4,
+				discountDetails5,
+				discountDetails6
 		);
 	}
 
