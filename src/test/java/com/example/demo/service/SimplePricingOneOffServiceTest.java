@@ -1,10 +1,10 @@
-package com.example.demo.services.pricingstrategy;
+package com.example.demo.service;
 
 import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.services.pricingstrategy.impl.SimplePricingOneOffStrategy;
+import com.example.demo.service.impl.SimplePricingOneOffService;
 import com.example.demo.utils.FormulaEvaluator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,14 +18,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
-class SimplePricingOneOffStrategyTest {
+class SimplePricingOneOffServiceTest {
 
-    private SimplePricingOneOffStrategy pricingStrategy;
+    private SimplePricingOneOffService pricingStrategy;
+
     private MockedStatic<FormulaEvaluator> mockedStatic;
 
     @BeforeEach
     public void setUp() {
-        pricingStrategy = new SimplePricingOneOffStrategy();
+        pricingStrategy = new SimplePricingOneOffService();
         mockedStatic = Mockito.mockStatic(FormulaEvaluator.class);
         mockedStatic.when(() -> FormulaEvaluator.evaluateFormula(any(), any())).thenReturn(true);
     }
@@ -47,11 +48,14 @@ class SimplePricingOneOffStrategyTest {
         priceRecipe.setPriceAppliedTo("netPrice");
 
         // Set up LineItem
-        LineItem lineItem = new LineItem();
-        lineItem.setNetPrice(100.0); // Original price
-
-        List<LineItem> lineItems = new ArrayList<>();
-        lineItems.add(lineItem);
+        List<LineItem> lineItems = List.of(
+                new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
+        );
 
         // Mock the ProfilingRequestDTO
         ProfilingRequestDTO profilingRequestDTO = new ProfilingRequestDTO();
@@ -62,11 +66,11 @@ class SimplePricingOneOffStrategyTest {
         pricingStrategy.calculatePrice(priceRecipe, profilingRequestDTO);
 
         // Verify that the price was updated correctly
-        assertEquals(90.0, lineItem.getNetPrice()); // 10% discount applied to 100.0
+        assertEquals(90.0, lineItems.get(0).getNetPrice()); // 10% discount applied to 100.0
 
         // Verify that the discount details were added
         List<DiscountDetails> discountDetails = profilingRequestDTO.getDiscountDetails();
-        assertEquals(1, discountDetails.size());
+        assertEquals(3, discountDetails.size());
 
         DiscountDetails discountDetail = discountDetails.get(0);
         assertEquals(10.0, discountDetail.getAdjustmentValue());
@@ -85,11 +89,14 @@ class SimplePricingOneOffStrategyTest {
         priceRecipe.setPriceAppliedTo("netPrice");
 
         // Set up LineItem
-        LineItem lineItem = new LineItem();
-        lineItem.setNetPrice(100.0); // Original price
-
-        List<LineItem> lineItems = new ArrayList<>();
-        lineItems.add(lineItem);
+        List<LineItem> lineItems = List.of(
+                new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
+        );
 
         // Mock the ProfilingRequestDTO
         ProfilingRequestDTO profilingRequestDTO = new ProfilingRequestDTO();
@@ -104,7 +111,7 @@ class SimplePricingOneOffStrategyTest {
 
         // Verify that the discount details were added
         List<DiscountDetails> discountDetails = profilingRequestDTO.getDiscountDetails();
-        assertEquals(1, discountDetails.size());
+        assertEquals(3, discountDetails.size());
 
         DiscountDetails discountDetail = discountDetails.get(0);
         assertEquals(15.0, discountDetail.getAdjustmentValue());

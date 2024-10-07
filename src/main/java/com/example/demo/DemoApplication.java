@@ -7,6 +7,8 @@ import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
+import com.example.demo.service.ISimplePricingOneOffService;
+import com.example.demo.service.impl.SimplePricingOneOffService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -20,6 +22,8 @@ import static com.example.demo.utils.MockDataGenerator.*;
 public class DemoApplication {
 
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
+
+	private static final ISimplePricingOneOffService simplePricingOnOffService = new SimplePricingOneOffService();
 
 
 	public static void main(String[] args) {}
@@ -44,7 +48,9 @@ public class DemoApplication {
 			for (PriceRecipe recipe : matchingRecipes) {
 				switch(recipe.getPriceSetting()) {
 					case "simplePricing":
-						// code block
+						if ("OneOff".equals(recipe.getType())) {
+							simplePricingOnOffService.calculatePrice(recipe, profilingRequestDTO);
+						}
 						break;
 					case "dealMax":
 						// code block

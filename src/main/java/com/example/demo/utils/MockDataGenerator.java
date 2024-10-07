@@ -9,16 +9,16 @@ public class MockDataGenerator {
     public static List<LineItem> fetchLineItems() {
         ArrayList<LineItem> lineItems = new ArrayList<>();
 
-        lineItems.add(new LineItem("1", "Model A", "Daily", "Tag1", "Category1", "Family1", 45.67, "Config1", "2024",100d, "1"));
-        lineItems.add(new LineItem("2","Model B", "Weekly", "Tag2", "Category2", "Family2", 78.23, "Config2", "2024",100d, "1"));
-        lineItems.add(new LineItem("3","Model C", "Monthly", "Tag3", "Category3", "Family3", 32.89, "Config3", "2024",100d, "1"));
-        lineItems.add(new LineItem("4","Model D", "Yearly", "Tag4", "Category4", "Family4", 15.50, "Config4", "2024",100d, "1"));
-        lineItems.add(new LineItem("5","Model A", "Monthly", "Tag1", "Category1", "Family1", 99.99, "Config5", "2024",100d, "1"));
-        lineItems.add(new LineItem("6","Model B", "Monthly", "Tag2", "Category2", "Family2", 29.99, "Config6", "2024",100d, "1"));
-        lineItems.add(new LineItem("7","Model C", "Weekly", "Tag3", "Category3", "Family3", 55.45, "Config7", "2024",100d, "1"));
-        lineItems.add(new LineItem("8","Model D", "Yearly", "Tag4", "Category4", "Family4", 40.00, "Config8", "2024",100d, "1"));
-        lineItems.add(new LineItem("9","Model A", "Daily", "Tag1", "Category1", "Family1", 66.88, "Config9", "2024",100d, "1"));
-        lineItems.add(new LineItem("LineItem1","Model B", "Monthly", "Tag2", "Category2", "Family2", 22.50, "Config10", "2025",100d, "1"));
+        lineItems.add(new LineItem("1", "Model A", "Daily", "Tag1", "Category1", "Family1", 45.67, 45.67, 45.67, 45.67, 45.67, "Config1", "2024",100d, "1"));
+        lineItems.add(new LineItem("2","Model B", "Weekly", "Tag2", "Category2", "Family2", 78.23, 78.23, 78.23, 78.23, 78.23, "Config2", "2024",100d, "1"));
+        lineItems.add(new LineItem("3","Model C", "Monthly", "Tag3", "Category3", "Family3", 32.89, 32.89, 32.89, 32.89, 32.89, "Config3", "2024",100d, "1"));
+        lineItems.add(new LineItem("4","Model D", "Yearly", "Tag4", "Category4", "Family4", 15.50, 15.50, 15.50, 15.50, 15.50, "Config4", "2024",100d, "1"));
+        lineItems.add(new LineItem("5","Model A", "Monthly", "Tag1", "Category1", "Family1", 99.99, 99.99, 99.99, 99.99, 99.99, "Config5", "2024",100d, "1"));
+        lineItems.add(new LineItem("6","Model B", "Monthly", "Tag2", "Category2", "Family2", 29.99, 29.99, 29.99, 29.99, 29.99, "Config6", "2024",100d, "1"));
+        lineItems.add(new LineItem("7","Model C", "Weekly", "Tag3", "Category3", "Family3", 55.45, 55.45, 55.45, 55.45, 55.45, "Config7", "2024",100d, "1"));
+        lineItems.add(new LineItem("8","Model D", "Yearly", "Tag4", "Category4", "Family4", 40.00, 40.00, 40.00, 40.00, 40.00, "Config8", "2024",100d, "1"));
+        lineItems.add(new LineItem("9","Model A", "Daily", "Tag1", "Category1", "Family1", 66.88, 66.88, 66.88, 66.88,66.88,"Config9", "2024",100d, "1"));
+        lineItems.add(new LineItem("LineItem1","Model B", "Monthly", "Tag2", "Category2", "Family2", 22.50, 22.50, 22.50, 22.50, 22.50, "Config10", "2025",100d, "1"));
 
         return lineItems;
     }

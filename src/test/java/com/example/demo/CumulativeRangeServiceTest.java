@@ -27,11 +27,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -79,11 +79,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -131,11 +131,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -183,11 +183,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -236,11 +236,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 10.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -287,11 +287,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 150.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 150.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 100.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 100.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);
@@ -338,11 +338,11 @@ public class CumulativeRangeServiceTest {
 
         List<LineItem> lineItems = List.of(
                 new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2024", 50.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 100.0, "ProductA"),
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 100.0, "ProductA"),
                 new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-                        100.0, "Configuration1", "2025", 1.0, "ProductB")
+                        100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
 
         profilingRequest.setLineItems(lineItems);

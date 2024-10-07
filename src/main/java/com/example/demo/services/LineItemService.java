@@ -40,11 +40,12 @@ public class LineItemService {
 
     public static LineItem getLineItemById(String id) {
         // fetch the tag from the database
-        return new LineItem(){
-            {
-                setQuantity(12);
-                setLocationName("HYDERABAD");
-            }
-        };
+//        return new LineItem(){
+//            {
+//                setQuantity(12);
+//                setLocationName("HYDERABAD");
+//            }
+//        };
+        return null; //todo: temp
     }
 }

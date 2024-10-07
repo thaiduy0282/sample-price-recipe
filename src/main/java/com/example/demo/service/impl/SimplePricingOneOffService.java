@@ -1,18 +1,20 @@
-package com.example.demo.services.pricingstrategy.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.enums.LineItemPricesSetter;
 import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.services.pricingstrategy.PriceSettingStrategy;
+import com.example.demo.service.ISimplePricingOneOffService;
 import com.example.demo.utils.FormulaEvaluator;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.List;
 import java.util.function.ObjDoubleConsumer;
 
-public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
+public class SimplePricingOneOffService implements ISimplePricingOneOffService {
 
     @Override
     public void calculatePrice(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
@@ -26,7 +28,8 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
 
         for (LineItem item : lineItems) {
 
-            if (!FormulaEvaluator.evaluateFormula(recipe.getPricingCondition(), String.valueOf(item.getId()))) {
+            if (isInvalidFormula(recipe.getPricingCondition(), item.getId()) ||
+                    isInvalidFormula(recipe.getAppliedOn(), item.getId())) {
                 continue;
             }
 
@@ -40,23 +43,31 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
         }
     }
 
+    private boolean isInvalidFormula(String formula, String lineItemId) {
+        return StringUtils.hasLength(formula) &&
+                FormulaEvaluator.evaluateFormula(formula, lineItemId);
+    }
+
     private void insertDiscountDetail(List<DiscountDetails> discountDetailsList,
                                       LineItem item, PriceRecipe recipe,
-                                      double originalPrice, double adjustedPrice) {
-        DiscountDetails discountDetails = new DiscountDetails();
-        discountDetails.setAdjustmentType(recipe.getApplicationType());
-        discountDetails.setAdjustmentValue(recipe.getApplicationValue());
-        discountDetails.setAppliedOnAmount(originalPrice);
-        discountDetails.setAfterAdjustment(adjustedPrice);
-        discountDetails.setDiscountSource("RECIPE");
-        discountDetails.setProductConfigurationId(item.getModel());
-        discountDetails.setLineItemId(String.valueOf(item.getId()));
-        discountDetails.setSequence(
-                discountDetailsList.isEmpty() ? 1 : discountDetailsList.getLast().getSequence() + 1
-        );
-        discountDetails.setRecipeId(String.valueOf(recipe.getId()));
-        discountDetails.setAppliedTo(recipe.getPriceAppliedTo());
-
+                                      double originalPrice, double adjustedPrice) {;
+        DiscountDetails discountDetails = DiscountDetails.builder()
+                .adjustmentType(recipe.getApplicationType())
+                .adjustmentValue(recipe.getApplicationValue())
+                .appliedOnAmount(originalPrice)
+                .afterAdjustment(adjustedPrice)
+                .netPrice(item.getNetPrice())
+                .discountDate(new Date().getTime())
+                .discountSource("Recipe")
+                .productConfigurationId(item.getProductId())
+                .lineItemId(item.getId())
+                .sequence(
+                        discountDetailsList.isEmpty() ? 1 : discountDetailsList.getLast().getSequence() + 1
+                )
+                .recipeId(recipe.getId())
+                .appliedTo(recipe.getPriceAppliedTo())
+                .name(recipe.getPriceAppliedTo())
+                .build();
 
         discountDetailsList.add(discountDetails);
     }
