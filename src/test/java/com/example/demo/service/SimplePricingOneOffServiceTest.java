@@ -42,10 +42,11 @@ class SimplePricingOneOffServiceTest {
     void testCalculatePricePercentageDiscount() {
         // Set up mock PriceRecipe
         PriceRecipe priceRecipe = new PriceRecipe();
-        priceRecipe.setApplicationType("%");
+        priceRecipe.setApplicationType("Percentage");
         priceRecipe.setApplicationValue(10.0); // 10% discount
         priceRecipe.setPriceApplicationON("netPrice"); // Field to apply discount
         priceRecipe.setPriceAppliedTo("netPrice");
+        priceRecipe.setDealStrategy("discount");
 
         // Set up LineItem
         List<LineItem> lineItems = List.of(
@@ -59,7 +60,7 @@ class SimplePricingOneOffServiceTest {
 
         // Set up DisCountDetails for lineItem lineItem-123
         DiscountDetails discountDetail = new DiscountDetails(
-                "%",        // adjustmentType
+                "Percentage",        // adjustmentType
                 10.0,               // adjustmentValue
                 100.0,              // appliedOnAmount
                 90.0,               // afterAdjustment
@@ -102,7 +103,7 @@ class SimplePricingOneOffServiceTest {
             initialPrice = initialPrice - (initialPrice * (discount.getAdjustmentValue() / 100));
         }
 
-        assertEquals(lineItem123DiscountDetailsList.getLast().getAfterAdjustment(), initialPrice);
+        assertEquals(lineItem123DiscountDetailsList.get(lineItem123DiscountDetailsList.size() - 1).getAfterAdjustment(), initialPrice);
     }
 
     @Test
@@ -113,10 +114,11 @@ class SimplePricingOneOffServiceTest {
 
         // Set up mock PriceRecipe
         PriceRecipe priceRecipe = new PriceRecipe();
-        priceRecipe.setApplicationType("amount");
+        priceRecipe.setApplicationType("Amount");
         priceRecipe.setApplicationValue(adjustmentValue); // Fixed discount of 15.0
-        priceRecipe.setPriceApplicationON("netPrice");
+        priceRecipe.setPriceApplicationON("referencePrice");
         priceRecipe.setPriceAppliedTo("referencePrice");
+        priceRecipe.setDealStrategy("discount");
 
         // Set up LineItem
         List<LineItem> lineItems = List.of(
@@ -130,7 +132,7 @@ class SimplePricingOneOffServiceTest {
 
         // Set up DisCountDetails for lineItem lineItem-123
         DiscountDetails discountDetail = new DiscountDetails(
-                "amount",        // adjustmentType
+                "Amount",        // adjustmentType
                 10.0,               // adjustmentValue
                 100.0,              // appliedOnAmount
                 85.0,               // afterAdjustment
@@ -170,7 +172,6 @@ class SimplePricingOneOffServiceTest {
 
         double lastAfterAdjustment = initialPrice - lineItem123DiscountDetailsList.size() * adjustmentValue;
 
-        assertEquals(lineItem123DiscountDetailsList.getLast().getAfterAdjustment(), lastAfterAdjustment);
-
+        assertEquals(lineItem123DiscountDetailsList.get(lineItem123DiscountDetailsList.size() - 1).getAfterAdjustment(), lastAfterAdjustment);
     }
 }
