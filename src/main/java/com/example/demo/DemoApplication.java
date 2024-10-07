@@ -7,8 +7,7 @@ import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
-import com.example.demo.service.ISimplePricingOneOffService;
-import com.example.demo.service.impl.SimplePricingOneOffService;
+import com.example.demo.service.SimplePricingOneOffService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -23,7 +22,7 @@ public class DemoApplication {
 
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 
-	private static final ISimplePricingOneOffService simplePricingOnOffService = new SimplePricingOneOffService();
+	private static final SimplePricingOneOffService simplePricingOnOffService = new SimplePricingOneOffService();
 
 
 	public static void main(String[] args) {}

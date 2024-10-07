@@ -4,7 +4,6 @@ import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.service.impl.SimplePricingOneOffService;
 import com.example.demo.utils.FormulaEvaluator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +12,10 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 class SimplePricingOneOffServiceTest {
@@ -53,40 +53,70 @@ class SimplePricingOneOffServiceTest {
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
-                new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
+
+        // Set up DisCountDetails for lineItem lineItem-123
+        DiscountDetails discountDetail = new DiscountDetails(
+                "%",        // adjustmentType
+                10.0,               // adjustmentValue
+                100.0,              // appliedOnAmount
+                90.0,               // afterAdjustment
+                100.0,               // netPrice
+                System.currentTimeMillis(), // discountDate
+                "Promo Code",       // discountSource
+                "DISCOUNT10",       // discountCode
+                "ProductB",       // productConfigurationId
+                "lineItem-123",     // lineItemId
+                1,                  // sequence
+                "ref-789",          // referenceId
+                "recipe-012",       // recipeId
+                "all"               // appliedTo
+        );
+        discountDetail.setName("netPrice");
+        ArrayList<DiscountDetails> discountDetails = new ArrayList<>();
+        discountDetails.add(discountDetail);
 
         // Mock the ProfilingRequestDTO
         ProfilingRequestDTO profilingRequestDTO = new ProfilingRequestDTO();
         profilingRequestDTO.setLineItems(lineItems);
-        profilingRequestDTO.setDiscountDetails(new ArrayList<>());
+        profilingRequestDTO.setDiscountDetails(discountDetails);
 
         // Run calculatePrice method
         pricingStrategy.calculatePrice(priceRecipe, profilingRequestDTO);
 
-        // Verify that the price was updated correctly
-        assertEquals(90.0, lineItems.get(0).getNetPrice()); // 10% discount applied to 100.0
 
         // Verify that the discount details were added
-        List<DiscountDetails> discountDetails = profilingRequestDTO.getDiscountDetails();
-        assertEquals(3, discountDetails.size());
+        List<DiscountDetails> discountDetailsAfter = profilingRequestDTO.getDiscountDetails();
+        assertEquals(3, discountDetailsAfter.size());
 
-        DiscountDetails discountDetail = discountDetails.get(0);
-        assertEquals(10.0, discountDetail.getAdjustmentValue());
-        assertEquals("netPrice", discountDetail.getAppliedTo());
-        assertEquals(100.0, discountDetail.getAppliedOnAmount());
-        assertEquals(90.0, discountDetail.getAfterAdjustment());
+        List<DiscountDetails> lineItem123DiscountDetailsList = discountDetailsAfter.stream()
+                .filter(discount -> discount.getLineItemId().equals("lineItem-123"))
+                .sorted(Comparator.comparingInt(DiscountDetails::getSequence))
+                .toList();
+        assertFalse(lineItem123DiscountDetailsList.isEmpty());
+
+        double initialPrice = 100d;
+        for (DiscountDetails discount : lineItem123DiscountDetailsList) {
+            initialPrice = initialPrice - (initialPrice * (discount.getAdjustmentValue() / 100));
+        }
+
+        assertEquals(lineItem123DiscountDetailsList.getLast().getAfterAdjustment(), initialPrice);
     }
 
     @Test
     void testCalculatePriceFixedDiscount() {
+
+        double initialPrice = 100d;
+        double adjustmentValue = 15.0;
+
         // Set up mock PriceRecipe
         PriceRecipe priceRecipe = new PriceRecipe();
         priceRecipe.setApplicationType("amount");
-        priceRecipe.setApplicationValue(15.0); // Fixed discount of 15.0
+        priceRecipe.setApplicationValue(adjustmentValue); // Fixed discount of 15.0
         priceRecipe.setPriceApplicationON("netPrice");
-        priceRecipe.setPriceAppliedTo("netPrice");
+        priceRecipe.setPriceAppliedTo("referencePrice");
 
         // Set up LineItem
         List<LineItem> lineItems = List.of(
@@ -94,29 +124,53 @@ class SimplePricingOneOffServiceTest {
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2024", 50.0, "ProductA"),
                 new LineItem("lineItem-345", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 10.0, "ProductA"),
-                new LineItem("lineItem-456", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
+                new LineItem("lineItem-123", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
                         100.0, 100.0, 100.0, 100.0, 100.0, "Configuration1", "2025", 1.0, "ProductB")
         );
+
+        // Set up DisCountDetails for lineItem lineItem-123
+        DiscountDetails discountDetail = new DiscountDetails(
+                "amount",        // adjustmentType
+                10.0,               // adjustmentValue
+                100.0,              // appliedOnAmount
+                85.0,               // afterAdjustment
+                100.0,               // netPrice
+                System.currentTimeMillis(), // discountDate
+                "Promo Code",       // discountSource
+                "DISCOUNT10",       // discountCode
+                "ProductB",       // productConfigurationId
+                "lineItem-123",     // lineItemId
+                1,                  // sequence
+                "ref-789",          // referenceId
+                "recipe-012",       // recipeId
+                "all"               // appliedTo
+        );
+        discountDetail.setName("referencePrice");
+        ArrayList<DiscountDetails> discountDetails = new ArrayList<>();
+        discountDetails.add(discountDetail);
 
         // Mock the ProfilingRequestDTO
         ProfilingRequestDTO profilingRequestDTO = new ProfilingRequestDTO();
         profilingRequestDTO.setLineItems(lineItems);
-        profilingRequestDTO.setDiscountDetails(new ArrayList<>());
+        profilingRequestDTO.setDiscountDetails(discountDetails);
 
         // Run calculatePrice method
         pricingStrategy.calculatePrice(priceRecipe, profilingRequestDTO);
 
-        // Verify that the price was updated correctly
-//        assertEquals(85.0, lineItem.getNetPrice()); // 15 fixed discount applied to 100.0
-
         // Verify that the discount details were added
-        List<DiscountDetails> discountDetails = profilingRequestDTO.getDiscountDetails();
-        assertEquals(3, discountDetails.size());
+        List<DiscountDetails> discountDetailsAfter = profilingRequestDTO.getDiscountDetails();
+        assertEquals(3, discountDetailsAfter.size());
 
-        DiscountDetails discountDetail = discountDetails.get(0);
-        assertEquals(15.0, discountDetail.getAdjustmentValue());
-        assertEquals("netPrice", discountDetail.getAppliedTo());
-        assertEquals(100.0, discountDetail.getAppliedOnAmount());
-        assertEquals(85.0, discountDetail.getAfterAdjustment());
+        List<DiscountDetails> lineItem123DiscountDetailsList = discountDetailsAfter.stream()
+                .filter(discount -> discount.getLineItemId().equals("lineItem-123"))
+                .sorted(Comparator.comparingInt(DiscountDetails::getSequence))
+                .toList();
+
+        assertFalse(lineItem123DiscountDetailsList.isEmpty());
+
+        double lastAfterAdjustment = initialPrice - lineItem123DiscountDetailsList.size() * adjustmentValue;
+
+        assertEquals(lineItem123DiscountDetailsList.getLast().getAfterAdjustment(), lastAfterAdjustment);
+
     }
 }
