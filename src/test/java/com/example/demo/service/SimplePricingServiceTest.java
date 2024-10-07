@@ -18,15 +18,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
-class SimplePricingOneOffServiceTest {
+class SimplePricingServiceTest {
 
-    private SimplePricingOneOffService pricingStrategy;
+    private SimplePricingService simplePricingService;
 
     private MockedStatic<FormulaEvaluator> mockedStatic;
 
     @BeforeEach
     public void setUp() {
-        pricingStrategy = new SimplePricingOneOffService();
+        simplePricingService = new SimplePricingService();
         mockedStatic = Mockito.mockStatic(FormulaEvaluator.class);
         mockedStatic.when(() -> FormulaEvaluator.evaluateFormula(any(), any())).thenReturn(true);
     }
@@ -39,7 +39,7 @@ class SimplePricingOneOffServiceTest {
     }
 
     @Test
-    void testCalculatePricePercentageDiscount() {
+    void testCalculatePriceOneOffPercentageDiscount() {
         // Set up mock PriceRecipe
         PriceRecipe priceRecipe = new PriceRecipe();
         priceRecipe.setApplicationType("Percentage");
@@ -47,6 +47,7 @@ class SimplePricingOneOffServiceTest {
         priceRecipe.setPriceApplicationON("netPrice"); // Field to apply discount
         priceRecipe.setPriceAppliedTo("netPrice");
         priceRecipe.setDealStrategy("discount");
+        priceRecipe.setType("OneOff");
 
         // Set up LineItem
         List<LineItem> lineItems = List.of(
@@ -85,7 +86,7 @@ class SimplePricingOneOffServiceTest {
         profilingRequestDTO.setDiscountDetails(discountDetails);
 
         // Run calculatePrice method
-        pricingStrategy.calculatePrice(priceRecipe, profilingRequestDTO);
+        simplePricingService.calculatePrice(priceRecipe, profilingRequestDTO);
 
 
         // Verify that the discount details were added
@@ -107,7 +108,7 @@ class SimplePricingOneOffServiceTest {
     }
 
     @Test
-    void testCalculatePriceFixedDiscount() {
+    void testCalculatePriceOneOffFixedDiscount() {
 
         double initialPrice = 100d;
         double adjustmentValue = 15.0;
@@ -119,6 +120,7 @@ class SimplePricingOneOffServiceTest {
         priceRecipe.setPriceApplicationON("referencePrice");
         priceRecipe.setPriceAppliedTo("referencePrice");
         priceRecipe.setDealStrategy("discount");
+        priceRecipe.setType("OneOff");
 
         // Set up LineItem
         List<LineItem> lineItems = List.of(
@@ -157,7 +159,7 @@ class SimplePricingOneOffServiceTest {
         profilingRequestDTO.setDiscountDetails(discountDetails);
 
         // Run calculatePrice method
-        pricingStrategy.calculatePrice(priceRecipe, profilingRequestDTO);
+        simplePricingService.calculatePrice(priceRecipe, profilingRequestDTO);
 
         // Verify that the discount details were added
         List<DiscountDetails> discountDetailsAfter = profilingRequestDTO.getDiscountDetails();

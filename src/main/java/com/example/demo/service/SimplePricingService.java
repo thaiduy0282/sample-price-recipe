@@ -11,9 +11,15 @@ import org.springframework.util.StringUtils;
 import java.util.Date;
 import java.util.List;
 
-public class SimplePricingOneOffService {
+public class SimplePricingService {
 
     public void calculatePrice(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+        if ("OneOff".equals(recipe.getType())) {
+            calculatePriceOneOff(recipe, profilingRequestDTO);
+        }
+    }
+
+    private void calculatePriceOneOff(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
         var applicationType = recipe.getApplicationType();
         var applicationValue = recipe.getApplicationValue();
 
