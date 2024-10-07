@@ -1,18 +1,19 @@
-package com.example.demo.services.pricingstrategy.impl;
+package com.example.demo.services.impl;
 
 import com.example.demo.enums.LineItemPricesSetter;
 import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.services.pricingstrategy.PriceSettingStrategy;
+import com.example.demo.services.ISimplePricingOneOffService;
 import com.example.demo.utils.FormulaEvaluator;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.ObjDoubleConsumer;
 
-public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
+public class SimplePricingOneOffService implements ISimplePricingOneOffService {
 
     @Override
     public void calculatePrice(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
@@ -26,9 +27,11 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
 
         for (LineItem item : lineItems) {
 
-            if (!FormulaEvaluator.evaluateFormula(recipe.getPricingCondition(), String.valueOf(item.getId()))) {
+            if (inValidFormula(recipe.getPricingCondition(), item.getId())
+                    && inValidFormula(recipe.getAppliedOn(), item.getId())) {
                 continue;
             }
+
 
             double originalPrice = getFieldValueByReflection(item, applicationOn);
 
@@ -38,6 +41,11 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
 
             insertDiscountDetail(discountDetailsList, item, recipe, originalPrice, adjustedPrice);
         }
+    }
+
+    private boolean inValidFormula(String formula, String lineItemId) {
+        return StringUtils.hasLength(formula) &&
+                FormulaEvaluator.evaluateFormula(formula, lineItemId);
     }
 
     private void insertDiscountDetail(List<DiscountDetails> discountDetailsList,
@@ -50,11 +58,11 @@ public class SimplePricingOneOffStrategy implements PriceSettingStrategy {
         discountDetails.setAfterAdjustment(adjustedPrice);
         discountDetails.setDiscountSource("RECIPE");
         discountDetails.setProductConfigurationId(item.getModel());
-        discountDetails.setLineItemId(String.valueOf(item.getId()));
+        discountDetails.setLineItemId(item.getId());
         discountDetails.setSequence(
                 discountDetailsList.isEmpty() ? 1 : discountDetailsList.getLast().getSequence() + 1
         );
-        discountDetails.setRecipeId(String.valueOf(recipe.getId()));
+        discountDetails.setRecipeId(recipe.getId());
         discountDetails.setAppliedTo(recipe.getPriceAppliedTo());
 
 

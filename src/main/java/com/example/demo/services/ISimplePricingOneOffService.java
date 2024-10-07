@@ -1,4 +1,4 @@
-package com.example.demo.services.pricingstrategy;
+package com.example.demo.services;
 
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
@@ -6,7 +6,7 @@ import com.example.demo.models.ProfilingRequestDTO;
 /**
  * The interface Price setting strategy.
  */
-public interface PriceSettingStrategy {
+public interface ISimplePricingOneOffService {
 
     /**
      * Calculate price.

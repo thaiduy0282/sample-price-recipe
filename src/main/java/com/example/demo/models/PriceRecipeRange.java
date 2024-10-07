@@ -20,21 +20,11 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 
 public class PriceRecipeRange {
-
-	private String scope;
-	private String scopeValue;
-	private String priceSetting;
-	private String type;
+	private double startTier;
+	private double endTier;
 	private String dealStrategy;
-	private String priceApplicationON;
-	private String executionSequence;
-	private String pricingCondition;
 	private String applicationType;
-	private double applicationValue;
-	private String appliedOn;
-	private String priceAppliedTo;
-	private String dimension;
-	private List<PriceRecipeRange> ranges;
-
-
+	private String applicationValue;
+	List<String > sourceDimensionName;
+	List<String > targetDimensionName;
 }

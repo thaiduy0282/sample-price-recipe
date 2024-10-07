@@ -42,8 +42,8 @@ public class LineItemService {
         // fetch the tag from the database
         return new LineItem(){
             {
-                setQuantity(12);
-                setLocationName("HYDERABAD");
+//                setQuantity(12);
+//                setLocationName("HYDERABAD");
             }
         };
     }
