@@ -13,47 +13,49 @@ public class FormulaEvaluatorTests {
 
     @Test
         void testFormulaEvaluator() {
-            String formula1 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-                    + " || product.tag.bg == \"CNS\""
-                    + " || lineItem.quantity > 10"
-                    + " || lineItem.locationName == \"HYDERABAD\"";
+            String formula1 = "(product.getType() == 'standalone' && category.getName() == 'Hardware Product')"
+                    + " || product.getTag().getBg() == 'CNS'"
+                    + " || lineItem.getQuantity() > 10"
+                    + " || lineItem.getLocationName() == 'HYDERABAD'"
+                    + " || product.getTag().getValue() contains { 'CNS', 'ABC' }";
 
-            String formula2 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-                    + " && product.tag.bg == \"CNS\""
-                    + " && lineItem.quantity > 10"
-                    + " && lineItem.locationName == \"HYDERABAD\"";
+            String formula2 = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\")"
+                + " && product.getTag().getBg() == \"CNS\""
+                + " && lineItem.getQuantity() > 10"
+                + " && lineItem.getLocationName() == \"HYDERABAD\""
+                + " && product.getTag().getValue() contains { \"CNS\", \"ABC\" }";
 
             assertTrue(com.example.demo.utils.FormulaEvaluator.evaluateFormula(formula1, "lineItemId"));
             assertFalse(com.example.demo.utils.FormulaEvaluator.evaluateFormula(formula2, "lineItemId"));
         }
 
-    @Test
-        void testConvertPropertyToGetter(){
-            String formula1 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-                + " || product.tag.bg == \"CNS\""
-                + " || lineItem.quantity > 10"
-                + " || lineItem.locationName == \"HYDERABAD\"";
-
-            String expression1 = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\")"
-                    + " || product.getTag().getBg() == \"CNS\""
-                    + " || lineItem.getQuantity() > 10"
-                    + " || lineItem.getLocationName() == \"HYDERABAD\"";
-
-            assertEquals(com.example.demo.utils.FormulaEvaluator.convertPropertyToGetter(formula1), expression1);
-
-            String formula2 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-                + " && product.tag.bg == \"CNS\""
-                + " && lineItem.quantity > 10"
-                + " && lineItem.locationName == \"12 Parker St. Ballarat\"";
-
-            String expression2 = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\")"
-                + " && product.getTag().getBg() == \"CNS\""
-                + " && lineItem.getQuantity() > 10"
-                + " && lineItem.getLocationName() == \"12 Parker St. Ballarat\"";
-
-            assertEquals(com.example.demo.utils.FormulaEvaluator.convertPropertyToGetter(formula2), expression2);
-
-        }
+//    @Test
+//        void testConvertPropertyToGetter(){
+//            String formula1 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
+//                + " || product.tag.bg == \"CNS\""
+//                + " || lineItem.quantity > 10"
+//                + " || lineItem.locationName == \"HYDERABAD\"";
+//
+//            String expression1 = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\")"
+//                    + " || product.getTag().getBg() == \"CNS\""
+//                    + " || lineItem.getQuantity() > 10"
+//                    + " || lineItem.getLocationName() == \"HYDERABAD\"";
+//
+//            assertEquals(com.example.demo.utils.FormulaEvaluator.convertPropertyToGetter(formula1), expression1);
+//
+//            String formula2 = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
+//                + " && product.tag.bg == \"CNS\""
+//                + " && lineItem.quantity > 10"
+//                + " && lineItem.locationName == \"12 Parker St. Ballarat\"";
+//
+//            String expression2 = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\")"
+//                + " && product.getTag().getBg() == \"CNS\""
+//                + " && lineItem.getQuantity() > 10"
+//                + " && lineItem.getLocationName() == \"12 Parker St. Ballarat\"";
+//
+//            assertEquals(com.example.demo.utils.FormulaEvaluator.convertPropertyToGetter(formula2), expression2);
+//
+//        }
 
     @Test
         void testAddPropertyToContext(){

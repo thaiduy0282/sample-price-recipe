@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -28,6 +29,7 @@ public class Tag implements Comparable<Tag> {
     private Long lastModifiedDate = 0L;
     private String externalId;
     private String bg;
+    private List<String> value;
 
     @Override
     public int compareTo(Tag o) {

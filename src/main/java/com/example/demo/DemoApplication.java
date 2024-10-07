@@ -67,13 +67,13 @@ public class DemoApplication {
 	 */
 	private static void mockParseFormula() {
 		// this formula provided from API payload
-		String formula = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
-				+ " || product.tag.bg == \"CNS\""
-				+ " || lineItem.quantity > 10"
-				+ " || lineItem.locationName == \"HYDERABAD\"";
+		String formula = "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\") || product.getTag().getBg() == \"CNS\" || lineItem.getQuantity() > 10 || lineItem.getLocationName() == \"HYDERABAD\"";
 
-		// Can FE provide payload like this ?
-		// "(product.getType() == \"standalone\" && category.getName() == \"Hardware Product\") || product.getTag().getBg() == \"CNS\" || lineItem.getQuantity() > 10 || lineItem.getLocationName() == \"HYDERABAD\""
+//		String formula = "(product.type == \"standalone\" && category.name == \"Hardware Product\")"
+//				+ " || product.tag.bg == \"CNS\""
+//				+ " || lineItem.quantity > 10"
+//				+ " || lineItem.locationName == \"HYDERABAD\"";
+
 		System.out.println("Result: " + FormulaEvaluator.evaluateFormula(formula, "lineitem1"));
 	}
 

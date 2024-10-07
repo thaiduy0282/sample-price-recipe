@@ -143,8 +143,7 @@ public class FormulaEvaluator {
      * @return true if the formula is valid, false otherwise
      */
     public static boolean evaluateFormula(String formula, String lineItemId) {
-        String expression = convertPropertyToGetter(formula);
-
+//        String expression = convertPropertyToGetter(formula);
         Set<String> targetObjects = extractProperties(formula);
 
         Map<String, Object> vars = constructMvelContext(targetObjects, lineItemId);
@@ -153,7 +152,7 @@ public class FormulaEvaluator {
             throw new IllegalArgumentException("No target objects found in the formula");
         }
 
-        Serializable compiled = MVEL.compileExpression(expression);
+        Serializable compiled = MVEL.compileExpression(formula);
         return (boolean) MVEL.executeExpression(compiled, vars);
     }
 }
