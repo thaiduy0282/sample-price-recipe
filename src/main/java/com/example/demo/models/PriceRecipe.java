@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,34 +22,21 @@ import lombok.Setter;
 
 public class PriceRecipe {
 
-	private Long id;
-
+	private String id;
 	private String scope;
-
 	private String scopeValue;
-
 	private String priceSetting;
-
 	private String type;
-
 	private String dealStrategy;
-
 	private String priceApplicationON;
-
 	private String executionSequence;
-
 	private String pricingCondition;
-
 	private String applicationType;
-
 	private double applicationValue;
-
 	private String appliedOn;
-
 	private String priceAppliedTo;
-
 	private String dimension;
-
 	private List<PriceRecipeRange> ranges;
+
 
 }
