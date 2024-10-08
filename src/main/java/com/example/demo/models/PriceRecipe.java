@@ -37,6 +37,7 @@ public class PriceRecipe {
 	private String priceAppliedTo;
 	private String dimension;
 	private List<PriceRecipeRange> ranges;
-
+	private Long voucherStartDate;
+	private Long voucherEndDate;
 
 }

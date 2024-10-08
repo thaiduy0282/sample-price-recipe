@@ -7,6 +7,7 @@ import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
+import com.example.demo.service.VoucherAuditService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -20,6 +21,8 @@ import static com.example.demo.utils.MockDataGenerator.*;
 public class DemoApplication {
 
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
+
+	private static final VoucherAuditService VOUCHER_AUDIT_SERVICE = new VoucherAuditService();
 
 
 	public static void main(String[] args) {}
@@ -47,7 +50,9 @@ public class DemoApplication {
 						// code block
 						break;
 					case "dealMax":
-						// code block
+						if (Objects.equals(recipe.getType(), "Voucher")) {
+							VOUCHER_AUDIT_SERVICE.processLineItems(recipe, profilingRequestDTO);
+						}
 						break;
 					case "buyXGetY":
 						// code block
