@@ -6,7 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 
-
+@Getter
+@Setter
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
@@ -26,9 +27,7 @@ public class Tag implements Comparable<Tag> {
     private String lastModifiedBy = StringUtils.EMPTY;
     private Long lastModifiedDate = 0L;
     private String externalId;
-    
-    
-    
+    private String bg;
 
     @Override
     public int compareTo(Tag o) {

@@ -47,4 +47,5 @@ public class Product {
 	private String productTypeId;
 	private String relatedPriceListId;
 	private String productUoM;
+	private Tag tag;
 }
