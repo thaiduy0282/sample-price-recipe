@@ -7,6 +7,7 @@ import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
+import com.example.demo.service.SimplePricingService;
 import com.example.demo.service.VoucherService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -19,11 +20,9 @@ import static com.example.demo.utils.MockDataGenerator.*;
 
 @SpringBootApplication
 public class DemoApplication {
-
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
-
+	private static final SimplePricingService SIMPLE_PRICING_SERVICE = new SimplePricingService();
 	private static final VoucherService VOUCHER_AUDIT_SERVICE = new VoucherService();
-
 
 	public static void main(String[] args) {}
 
@@ -47,10 +46,12 @@ public class DemoApplication {
 			for (PriceRecipe recipe : matchingRecipes) {
 				switch(recipe.getPriceSetting()) {
 					case "simplePricing":
-						// code block
+						if ("oneOff".equals(recipe.getType())) {
+							SIMPLE_PRICING_SERVICE.calculatePriceOneOff(recipe, profilingRequestDTO);
+						}
 						break;
 					case "dealMax":
-						if (Objects.equals(recipe.getType(), "Voucher")) {
+						if (Objects.equals(recipe.getType(), "voucher")) {
 							VOUCHER_AUDIT_SERVICE.calculateVoucher(recipe, profilingRequestDTO);
 						} else if (Objects.equals(recipe.getType(), "buyXGetY")) {
 							// code block
@@ -62,7 +63,6 @@ public class DemoApplication {
 						} else {
 							// code block
 						}
-
 						break;
 					default:
 						// not found type

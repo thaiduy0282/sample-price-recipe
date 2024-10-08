@@ -30,7 +30,7 @@ public class VoucherService {
             }
 
             // 1.3 Execute the formula in PricingCondition & AppliedOn
-            if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item.getId()) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item.getId())) {
+            if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item)) {
                 continue; // Move to next lineItem if the formula is false
             }
 

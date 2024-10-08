@@ -153,8 +153,8 @@ public class Util {
         return price;
     }
 
-    public static boolean isValidFormula(String formula, String lineItemId) {
+    public static boolean isValidFormula(String formula, LineItem lineItem) {
         return !StringUtils.hasLength(formula) ||
-                FormulaEvaluator.evaluateFormula(formula, lineItemId);
+                FormulaEvaluator.evaluateFormula(formula, lineItem);
     }
 }
