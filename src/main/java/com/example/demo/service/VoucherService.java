@@ -8,9 +8,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 
-public class VoucherAuditService {
+public class VoucherService {
 
-    public void processLineItems(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
+    public void calculateVoucher(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
         List<LineItem> lineItems = profilingRequest.getLineItems();
         LocalDate currentDate = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDate();
 
@@ -70,11 +70,13 @@ public class VoucherAuditService {
 
     private void createVoucherAudit(LineItem item, PriceRecipe priceRecipe) {
         VoucherAudit voucherAudit = new VoucherAudit();
-        // Set properties of voucherAudit
-        voucherAudit.setVoucherCode("VOUCHER123"); // Example value, replace as needed
+        voucherAudit.setVoucherCode(priceRecipe.getVoucherCode()); // Example value, replace as needed
         voucherAudit.setStartDate(priceRecipe.getVoucherStartDate());
         voucherAudit.setEndDate(priceRecipe.getVoucherEndDate());
         voucherAudit.setLineItemId(item.getId());
-        // call the function to save voucherAudit to DB
+        voucherAudit.setAccountId("");
+        voucherAudit.setProductConfigurationId(item.getProductId());
+
+        // call the service to save VoucherAudit to DB
     }
 }
