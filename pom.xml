@@ -65,6 +65,11 @@
 			<version>2.5.2.Final</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-cosmos</artifactId>
+			<version>LATEST</version>
+		</dependency>
 	</dependencies>
 
 	<build>

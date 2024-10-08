@@ -12,7 +12,15 @@ import static com.example.demo.utils.MockDataGenerator.fetchAllRecipes;
 public class DemoApplication {
 
 	public static void main(String[] args) {
-		mockParseFormula();
+		LineItem lineItem = new LineItem(){
+			{
+				setId("id2");
+				setProductId("productId");
+			}
+		};
+
+		String formula = "lineItem.id == 'id2' && product.type == 'standalone'";
+		System.out.println("res2: " + FormulaEvaluator.evaluateFormula2(formula, lineItem));
 	}
 
 

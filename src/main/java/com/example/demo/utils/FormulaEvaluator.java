@@ -1,18 +1,19 @@
 package com.example.demo.utils;
 
 import com.example.demo.common.Constants;
+import com.example.demo.models.LineItem;
+import com.example.demo.services.CosmosDbService;
+import com.example.demo.services.LineItemService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mvel2.MVEL;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,6 +96,35 @@ public class FormulaEvaluator {
         return context;
     }
 
+    public static Map<String, Object> constructMvelContext1(Set<String> targetObjects, String lineItemId) {
+        LineItem lineItem = LineItemService.getLineItemById(lineItemId);
+
+        Map<String, Object> context = new HashMap<>();
+
+        // Add line item object to the context map
+        for (Field field : LineItem.class.getDeclaredFields()) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+
+            try {
+                Object fieldValue = field.get(lineItem);
+                context.put(fieldName, fieldValue);
+            } catch (IllegalAccessException e) {
+                log.error("Skip field: {}", fieldName);
+                log.error(e.toString());
+            }
+        }
+
+        // Check if the target object is a member object of the line item
+        for (String targetObject : targetObjects) {
+            if (!context.containsKey(targetObject)) {
+                throw new IllegalArgumentException(String.format("Target object '%s' not found in LineItem", targetObject));
+            }
+        }
+
+        return context;
+    }
+
     private static String upperFirstLetter(String str){
         if (str == null || str.isEmpty()) {
             return str;
@@ -150,6 +180,52 @@ public class FormulaEvaluator {
 
         if(vars.isEmpty()){
             throw new IllegalArgumentException("No target objects found in the formula");
+        }
+
+        Serializable compiled = MVEL.compileExpression(formula);
+        return (boolean) MVEL.executeExpression(compiled, vars);
+    }
+
+    public static Map<String, Object> constructMvelContext2(Set<String> targetObjects, LineItem lineItem) {
+        Map<String, Object> context = new HashMap<>();
+
+        for (String targetObject : targetObjects) {
+            if (Constants.LINE_ITEM_PROPERTY.equalsIgnoreCase(targetObject)) {
+                continue;
+            }
+
+            try {
+                Field field = LineItem.class.getDeclaredField(targetObject + "Id");
+                field.setAccessible(true);
+                Object fieldValue = field.get(lineItem);
+
+                if (fieldValue == null) {
+                    throw new IllegalArgumentException(String.format("Field '%s' not found in LineItem", targetObject));
+                }
+
+                Map<String, Object> filter = new HashMap<>();
+                filter.put("id", fieldValue);
+
+                CosmosDbService.addEntityToContext(targetObject, filter, context);
+            } catch (NoSuchFieldException e) {
+                log.error(e.getMessage());
+                throw new RuntimeException(String.format("NoSuchFieldException: '%sId' not found in LineItem", targetObject));
+            } catch (IllegalAccessException e) {
+                log.error(e.getMessage());
+                throw new RuntimeException(String.format("IllegalAccessException: can not get value of field '%sId'", targetObject));
+            }
+        }
+
+        return context;
+    }
+
+    public static boolean evaluateFormula2(String formula, LineItem lineItem){
+        Set<String> targetObjects = extractProperties(formula);
+
+        Map<String, Object> vars = constructMvelContext2(targetObjects, lineItem);
+
+        if(targetObjects.contains(Constants.LINE_ITEM_PROPERTY)){
+            vars.put(Constants.LINE_ITEM_PROPERTY, lineItem);
         }
 
         Serializable compiled = MVEL.compileExpression(formula);
