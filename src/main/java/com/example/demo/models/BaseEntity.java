@@ -11,4 +11,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class BaseEntity {
     private String name;
+
+    private Long createdOn;
+
+    private Long createdBy;
+
 }

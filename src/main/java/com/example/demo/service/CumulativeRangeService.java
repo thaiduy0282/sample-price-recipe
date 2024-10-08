@@ -153,7 +153,7 @@ public class CumulativeRangeService {
             if (latestDiscount != null) {
 
                 // Calculate the adjusted price using the deal strategy and application details from the PriceRecipeRange
-                double adjustedPrice = calculateAdjustedPrice(
+                double adjustedPrice = Util.calculateAdjustedPrice(
                         latestDiscount.getAfterAdjustment(),
                         priceRecipeRange.getDealStrategy(),
                         priceRecipeRange.getApplicationType(),
@@ -178,67 +178,5 @@ public class CumulativeRangeService {
     private double calculateTotalQuantity(List<LineItem> items) {
         // Sum up the quantity for each LineItem
         return items.stream().mapToDouble(LineItem::getQuantity).sum();
-    }
-
-    /**
-     * Calculates the adjusted price based on the deal strategy and application type.
-     *
-     * @param price Get the value from the field that AppliedTo has configured
-     * @param dealStrategy The strategy for price adjustment (discount or markup).
-     * @param applicationType The type of adjustment (% or Amount).
-     * @param applicationValue The value of the adjustment (either a percentage or an amount).
-     * @return The adjusted price after applying the discount or markup.
-     */
-    private double calculateAdjustedPrice(double price, String dealStrategy, String applicationType, String applicationValue) {
-        double adjustmentValue = Double.parseDouble(applicationValue);
-
-        // Apply discount or markup based on the dealStrategy
-        return switch (dealStrategy.toLowerCase()) {
-            case "discount" -> applyDiscount(price, applicationType, adjustmentValue);
-            case "markup" -> applyMarkup(price, applicationType, adjustmentValue);
-            default ->
-                // If no valid dealStrategy is provided, return the original price
-                    price;
-        };
-    }
-
-    /**
-     * Applies a discount to the price based on the application type.
-     *
-     * @param price The original price of the item.
-     * @param applicationType The type of adjustment (% or Amount).
-     * @param adjustmentValue The value of the adjustment (either a percentage or an amount).
-     * @return The adjusted price after applying the discount.
-     */
-    private double applyDiscount(double price, String applicationType, double adjustmentValue) {
-        if ("Percentage".equalsIgnoreCase(applicationType)) {
-            // Apply percentage-based discount
-            return price - (price * (adjustmentValue / 100));
-        } else if ("Amount".equalsIgnoreCase(applicationType)) {
-            // Apply fixed amount discount
-            return price - adjustmentValue;
-        }
-        // Return the original netPrice if no valid applicationType is provided
-        return price;
-    }
-
-    /**
-     * Applies a markup to the price based on the application type.
-     *
-     * @param price The original price of the item.
-     * @param applicationType The type of adjustment (% or Amount).
-     * @param adjustmentValue The value of the adjustment (either a percentage or an amount).
-     * @return The adjusted price after applying the markup.
-     */
-    private double applyMarkup(double price, String applicationType, double adjustmentValue) {
-        if ("Percentage".equalsIgnoreCase(applicationType)) {
-            // Apply percentage-based markup
-            return price + (price * (adjustmentValue / 100));
-        } else if ("Amount".equalsIgnoreCase(applicationType)) {
-            // Apply fixed amount markup
-            return price + adjustmentValue;
-        }
-        // Return the original netPrice if no valid applicationType is provided
-        return price;
     }
 }

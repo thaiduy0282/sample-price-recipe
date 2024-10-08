@@ -8,6 +8,7 @@ import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
 import com.example.demo.service.SimplePricingService;
+import com.example.demo.service.VoucherService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -19,10 +20,9 @@ import static com.example.demo.utils.MockDataGenerator.*;
 
 @SpringBootApplication
 public class DemoApplication {
-
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
-
-	private static final SimplePricingService simplePricingOnOffService = new SimplePricingService();
+	private static final SimplePricingService SIMPLE_PRICING_SERVICE = new SimplePricingService();
+	private static final VoucherService VOUCHER_AUDIT_SERVICE = new VoucherService();
 
 	public static void main(String[] args) {}
 
@@ -46,18 +46,23 @@ public class DemoApplication {
 			for (PriceRecipe recipe : matchingRecipes) {
 				switch(recipe.getPriceSetting()) {
 					case "simplePricing":
-						if ("OneOff".equals(recipe.getType())) {
-							simplePricingOnOffService.calculatePriceOneOff(recipe, profilingRequestDTO);
+						if ("oneOff".equals(recipe.getType())) {
+							SIMPLE_PRICING_SERVICE.calculatePriceOneOff(recipe, profilingRequestDTO);
 						}
 						break;
 					case "dealMax":
-						// code block
+						if (Objects.equals(recipe.getType(), "voucher")) {
+							VOUCHER_AUDIT_SERVICE.calculateVoucher(recipe, profilingRequestDTO);
+						} else if (Objects.equals(recipe.getType(), "buyXGetY")) {
+							// code block
+						}
 						break;
-					case "buyXGetY":
-						// code block
-						break;
-					case "cumulativeRange":
-						CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
+					case "range":
+						if (Objects.equals(recipe.getType(), "cumulativeRange")) {
+							CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
+						} else {
+							// code block
+						}
 						break;
 					default:
 						// not found type
