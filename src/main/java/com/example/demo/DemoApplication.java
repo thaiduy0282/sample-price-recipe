@@ -24,7 +24,6 @@ public class DemoApplication {
 
 	private static final SimplePricingService simplePricingOnOffService = new SimplePricingService();
 
-
 	public static void main(String[] args) {}
 
 
@@ -47,7 +46,9 @@ public class DemoApplication {
 			for (PriceRecipe recipe : matchingRecipes) {
 				switch(recipe.getPriceSetting()) {
 					case "simplePricing":
-						simplePricingOnOffService.calculatePrice(recipe, profilingRequestDTO);
+						if ("OneOff".equals(recipe.getType())) {
+							simplePricingOnOffService.calculatePriceOneOff(recipe, profilingRequestDTO);
+						}
 						break;
 					case "dealMax":
 						// code block

@@ -5,12 +5,15 @@ import com.example.demo.models.LineItem;
 import com.example.demo.models.Product;
 import com.example.demo.models.Tag;
 
+import java.util.List;
+
 // MODIFY this code in real use case
 public class LineItemService {
     // TRUE case:
     public static Tag tagTrue = new Tag(){
         {
             setBg("CNS");
+            setValue(List.of("CNS", "ABC"));
         }
     };
 

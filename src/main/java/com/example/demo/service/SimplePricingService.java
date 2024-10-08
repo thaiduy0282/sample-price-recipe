@@ -13,13 +13,7 @@ import java.util.List;
 
 public class SimplePricingService {
 
-    public void calculatePrice(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
-        if ("OneOff".equals(recipe.getType())) {
-            calculatePriceOneOff(recipe, profilingRequestDTO);
-        }
-    }
-
-    private void calculatePriceOneOff(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+    public void calculatePriceOneOff(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
         var applicationType = recipe.getApplicationType();
         var applicationValue = recipe.getApplicationValue();
 
@@ -27,7 +21,7 @@ public class SimplePricingService {
         List<DiscountDetails> discountDetailsList = profilingRequestDTO.getDiscountDetails();
 
         lineItems.stream()
-                .filter(item -> isValidFormula(recipe.getPricingCondition(), item.getId()) && isValidFormula(recipe.getAppliedOn(), item.getId()))
+                .filter(item -> isValidFormula(recipe.getPricingCondition(), item) && isValidFormula(recipe.getAppliedOn(), item))
                 .forEach(item -> {
                     DiscountDetails lastDiscountDetailsOfLineItem = Util.findLatestDiscountDetail(
                             item.getId(),
@@ -45,9 +39,9 @@ public class SimplePricingService {
                 });
     }
 
-    private boolean isValidFormula(String formula, String lineItemId) {
+    private boolean isValidFormula(String formula, LineItem lineItem) {
         return !StringUtils.hasLength(formula) ||
-                FormulaEvaluator.evaluateFormula(formula, lineItemId);
+                FormulaEvaluator.evaluateFormula(formula, lineItem);
     }
 
     private void insertDiscountDetail(List<DiscountDetails> discountDetailsList,

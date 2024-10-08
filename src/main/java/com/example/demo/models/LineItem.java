@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LineItem  {
 	private static final long serialVersionUID = 8204041143290681328L;
-	private String Id;
+	private String id;
 	private String model;
 	private String sellingFrequency;
 	private String tags;
@@ -27,5 +27,4 @@ public class LineItem  {
 	private Double quantity;
 	private String productId;
 	private String locationName;
-
 }
