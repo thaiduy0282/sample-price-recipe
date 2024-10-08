@@ -1,13 +1,14 @@
 package com.example.demo.utils;
 
-import com.example.demo.models.Category;
-import com.example.demo.models.LineItem;
-import com.example.demo.models.Product;
-import com.example.demo.services.LineItemService;
+import com.example.demo.common.Constants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mvel2.MVEL;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,6 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FormulaEvaluator {
+    private static final Logger log = LogManager.getLogger(FormulaEvaluator.class);
+
     public static String capitalizeAfterDot(String input) {
         StringBuilder sb = new StringBuilder();
         boolean capitalizeNext = false; // Flag to indicate next character should be uppercase
@@ -92,24 +95,44 @@ public class FormulaEvaluator {
         return context;
     }
 
-    // MODIFY this function in real use case
-    public static void addPropertyToContext(String targetObject, Map<String, Object> context, String lineItemId) {
-        switch (targetObject) {
-            case "product":
-                Product product = LineItemService.getProductById(lineItemId);
-                context.put("product", product);
-                break;
-            case "lineItem":
-                LineItem lineItem = LineItemService.getLineItemById(lineItemId);
-                context.put("lineItem", lineItem);
-                break;
-            case "category":
-                Category category = LineItemService.getCategoryById(lineItemId);
-                context.put("category", category);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown target object: " + targetObject);
+    private static String upperFirstLetter(String str){
+        if (str == null || str.isEmpty()) {
+            return str;
         }
+
+        char[] charArray = str.toCharArray();
+        charArray[0] = Character.toUpperCase(charArray[0]);
+        return new String(charArray);
+    }
+
+    /**
+     * Adds a property object to the context map.
+     * For example, if the target object is "product", the context map will contain { "product", LineItemService.getProductById(lineItemId) }.
+     *
+     * @param targetObject the target object to add to the context map
+     * @param context the context map to add the target object to
+     * @param lineItemId the line item ID to fetch the target object
+     */
+    public static void addPropertyToContext(String targetObject, Map<String, Object> context, String lineItemId) {
+        String targetMethodName = "get" + upperFirstLetter(targetObject) + "ById";
+
+        try {
+            Class<?> lineItemServiceClass = Class.forName(Constants.LINE_ITEM_SERVICE_PATH);
+            Method targetMethod = lineItemServiceClass.getDeclaredMethod(targetMethodName, String.class);
+
+            Object lineItemServiceInstance = lineItemServiceClass.getDeclaredConstructor().newInstance();
+            Object result = targetMethod.invoke(lineItemServiceInstance, lineItemId);
+
+            context.put(targetObject, result);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("ClassNotFoundException on reflection call LineItemService class");
+        }catch (NoSuchMethodException e) {
+            throw new RuntimeException(String.format("NoSuchMethodException on reflection call %s method", targetMethodName));
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            log.error(e.toString());
+            throw new RuntimeException("Exception on reflection call LineItemService instance");
+        }
+
     }
 
     /**

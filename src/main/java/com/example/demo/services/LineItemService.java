@@ -16,7 +16,7 @@ public class LineItemService {
 
     public static Product prodTrue = new Product(){
         {
-            setType("standalone");
+            setType("standalon"); // typo on purpose
             setTag(tagTrue);
         }
     };
@@ -24,6 +24,13 @@ public class LineItemService {
     public static Category categoryTrue = new Category(){
         {
             setName("Hardware Product");
+        }
+    };
+
+    public static LineItem lineItemTrue = new LineItem(){
+        {
+            setQuantity(12d);
+            setLocationName("HYDERABAD");
         }
     };
 
@@ -40,12 +47,6 @@ public class LineItemService {
 
     public static LineItem getLineItemById(String id) {
         // fetch the tag from the database
-//        return new LineItem(){
-//            {
-//                setQuantity(12);
-//                setLocationName("HYDERABAD");
-//            }
-//        };
-        return null; //todo: temp
+        return lineItemTrue;
     }
 }
