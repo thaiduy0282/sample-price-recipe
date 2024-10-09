@@ -65,7 +65,7 @@ public class FormulaEvaluator {
         CosmosDbService.addEntityToContext(Constants.CATEGORY_PROPERTY, categoryFilter, context);
     }
 
-    private static Map<String, Object> getStringObjectMap(LineItem lineItem, String targetObject) throws NoSuchFieldException, IllegalAccessException {
+    private static Map<String, Object> getContextFromLineItem(LineItem lineItem, String targetObject) throws NoSuchFieldException, IllegalAccessException {
         Field field = LineItem.class.getDeclaredField(targetObject + "Id");
         field.setAccessible(true);
         Object fieldValue = field.get(lineItem);
@@ -97,14 +97,13 @@ public class FormulaEvaluator {
                 default -> {
                     try {
                         // dynamic fetching object base on propertyId in the line item
-                        Map<String, Object> filter = getStringObjectMap(lineItem, targetObject);
+                        Map<String, Object> filter = getContextFromLineItem(lineItem, targetObject);
                         CosmosDbService.addEntityToContext(targetObject, filter, context);
                     } catch (NoSuchFieldException e) {
                         log.error(e.getMessage());
-                        throw new RuntimeException(String.format("NoSuchFieldException: '%sId' not found in LineItem", targetObject));
+                        throw new RuntimeException(String.format("Field '%sId' not found in LineItem", targetObject));
                     } catch (IllegalAccessException e) {
-                        log.error(e.getMessage());
-                        throw new RuntimeException(String.format("IllegalAccessException: can not get value of field '%sId'", targetObject));
+                        throw new RuntimeException(e.getMessage());
                     }
                 }
             }

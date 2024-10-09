@@ -48,7 +48,7 @@ public class CosmosDbService {
         Optional<Object> res = results.stream().findFirst();
 
         if (res.isEmpty()) {
-            return;
+            throw new RuntimeException("Entity not found with query: " + query);
         }
 
         context.put(containerName, res.get());
