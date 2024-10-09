@@ -31,7 +31,7 @@ public class VoucherService {
             for (LineItem item : lineItems) {
 
                 // 1.3 Execute the formula in PricingCondition & AppliedOn
-                if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item.getId()) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item.getId())) {
+                if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item)) {
                     continue; // Move to next lineItem if the formula is false
                 }
 
@@ -65,6 +65,7 @@ public class VoucherService {
     private void updateVoucherState(PriceRecipe priceRecipe, Voucher voucher) {
         voucher.setIsUsed(true);
         priceRecipe.setVoucher(voucher);
+        //call the service to save PriceRecipe to db
     }
 
     private boolean isDateWithinRange(LocalDate currentDate, LocalDate startDate, LocalDate endDate) {
