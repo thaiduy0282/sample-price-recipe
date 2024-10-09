@@ -14,48 +14,52 @@ public class VoucherService {
         List<LineItem> lineItems = profilingRequest.getLineItems();
         LocalDate currentDate = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDate();
 
-        for (LineItem item : lineItems) {
+        Voucher voucher = priceRecipe.getVoucher();
+
+        if(voucher != null) {
             // Convert timestamps to LocalDate for comparison
-            LocalDate voucherStartDate = Instant.ofEpochMilli(priceRecipe.getVoucherStartDate()).atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate voucherEndDate = Instant.ofEpochMilli(priceRecipe.getVoucherEndDate()).atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate voucherStartDate = Instant.ofEpochMilli(voucher.getStartDate()).atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate voucherEndDate = Instant.ofEpochMilli(voucher.getEndDate()).atZone(ZoneId.systemDefault()).toLocalDate();
 
-            // 1.1 Check if currentDate is in between VoucherStartDate + VoucherEndDate
-            if (!isDateWithinRange(currentDate, voucherStartDate, voucherEndDate)) {
-                continue; // Move to next lineItem if out of date
-            }
+            for (LineItem item : lineItems) {
+                // 1.1 Check if currentDate is in between VoucherStartDate + VoucherEndDate
+                if (!isDateWithinRange(currentDate, voucherStartDate, voucherEndDate)) {
+                    continue; // Move to next lineItem if out of date
+                }
 
-            // 1.2 Check if the Voucher is already used or not
-            if (isVoucherUsed(priceRecipe)) {
-                continue; // Move to next lineItem if voucher is already used
-            }
+                // 1.2 Check if the Voucher is already used or not
+                if (isVoucherUsed(priceRecipe)) {
+                    continue; // Move to next lineItem if voucher is already used
+                }
 
-            // 1.3 Execute the formula in PricingCondition & AppliedOn
-            if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item.getId()) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item.getId())) {
-                continue; // Move to next lineItem if the formula is false
-            }
+                // 1.3 Execute the formula in PricingCondition & AppliedOn
+                if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item.getId()) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item.getId())) {
+                    continue; // Move to next lineItem if the formula is false
+                }
 
-            // Get the latest discount detail for this LineItem and pricing context
-            DiscountDetails latestDiscount = Util.findLatestDiscountDetail(item.getId(), priceRecipe.getPriceApplicationON(), profilingRequest);
-            // Only apply adjustments if there are existing discounts
-            if (latestDiscount != null) {
+                // Get the latest discount detail for this LineItem and pricing context
+                DiscountDetails latestDiscount = Util.findLatestDiscountDetail(item.getId(), priceRecipe.getPriceApplicationON(), profilingRequest);
+                // Only apply adjustments if there are existing discounts
+                if (latestDiscount != null) {
 
-                // Calculate the adjusted price using the deal strategy and application details from the PriceRecipeRange
-                double adjustedPrice = Util.calculateAdjustedPrice(
-                        latestDiscount.getAfterAdjustment(),
-                        priceRecipe.getDealStrategy(),
-                        priceRecipe.getApplicationType(),
-                        String.valueOf(priceRecipe.getApplicationValue())
-                );
+                    // Calculate the adjusted price using the deal strategy and application details from the PriceRecipeRange
+                    double adjustedPrice = Util.calculateAdjustedPrice(
+                            latestDiscount.getAfterAdjustment(),
+                            priceRecipe.getDealStrategy(),
+                            priceRecipe.getApplicationType(),
+                            String.valueOf(priceRecipe.getApplicationValue())
+                    );
 
-                // Determine the next sequence number for the discount
-                int nextSequence = latestDiscount.getSequence() + 1;
+                    // Determine the next sequence number for the discount
+                    int nextSequence = latestDiscount.getSequence() + 1;
 
-                // Create and add a new DiscountDetails entry to the profiling request
-                Util.createAndAddDiscountDetails(item, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe, profilingRequest);
+                    // Create and add a new DiscountDetails entry to the profiling request
+                    Util.createAndAddDiscountDetails(item, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe, profilingRequest);
 
-                createVoucherAudit(item, priceRecipe);
+                    createVoucherAudit(item, voucher);
 
-                updateVoucherState(priceRecipe, true);
+                    updateVoucherState(priceRecipe, voucher);
+                }
             }
         }
     }
@@ -65,10 +69,9 @@ public class VoucherService {
         return priceRecipe.getVoucher() != null && priceRecipe.getVoucher().getIsUsed();
     }
 
-    private void updateVoucherState(PriceRecipe priceRecipe, boolean isUsed) {
-        if(priceRecipe.getVoucher() != null){
-            priceRecipe.getVoucher().setIsUsed(isUsed);
-        }
+    private void updateVoucherState(PriceRecipe priceRecipe, Voucher voucher) {
+        voucher.setIsUsed(true);
+        priceRecipe.setVoucher(voucher);
     }
 
     private boolean isDateWithinRange(LocalDate currentDate, LocalDate startDate, LocalDate endDate) {
@@ -76,11 +79,11 @@ public class VoucherService {
                 (currentDate.isEqual(endDate) || currentDate.isBefore(endDate));
     }
 
-    private void createVoucherAudit(LineItem item, PriceRecipe priceRecipe) {
+    private void createVoucherAudit(LineItem item, Voucher voucher) {
         VoucherAudit voucherAudit = new VoucherAudit();
-        voucherAudit.setVoucherCode(priceRecipe.getVoucherCode()); // Example value, replace as needed
-        voucherAudit.setStartDate(priceRecipe.getVoucherStartDate());
-        voucherAudit.setEndDate(priceRecipe.getVoucherEndDate());
+        voucherAudit.setVoucherCode(voucher.getCode()); // Example value, replace as needed
+        voucherAudit.setStartDate(voucher.getStartDate());
+        voucherAudit.setEndDate(voucher.getEndDate());
         voucherAudit.setLineItemId(item.getId());
         voucherAudit.setAccountId("");
         voucherAudit.setProductConfigurationId(item.getProductId());
