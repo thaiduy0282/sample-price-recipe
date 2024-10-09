@@ -40,5 +40,6 @@ public class PriceRecipe {
 	private String voucherCode;
 	private Long voucherStartDate;
 	private Long voucherEndDate;
+	private Voucher voucher;
 
 }

@@ -25,7 +25,7 @@ public class VoucherService {
             }
 
             // 1.2 Check if the Voucher is already used or not
-            if (isVoucherUsed(item)) {
+            if (isVoucherUsed(priceRecipe)) {
                 continue; // Move to next lineItem if voucher is already used
             }
 
@@ -54,13 +54,21 @@ public class VoucherService {
                 Util.createAndAddDiscountDetails(item, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe, profilingRequest);
 
                 createVoucherAudit(item, priceRecipe);
+
+                updateVoucherState(priceRecipe, true);
             }
         }
     }
 
 
-    private boolean isVoucherUsed(LineItem item) {
-        return true;
+    private boolean isVoucherUsed(PriceRecipe priceRecipe) {
+        return priceRecipe.getVoucher() != null && priceRecipe.getVoucher().getIsUsed();
+    }
+
+    private void updateVoucherState(PriceRecipe priceRecipe, boolean isUsed) {
+        if(priceRecipe.getVoucher() != null){
+            priceRecipe.getVoucher().setIsUsed(isUsed);
+        }
     }
 
     private boolean isDateWithinRange(LocalDate currentDate, LocalDate startDate, LocalDate endDate) {
