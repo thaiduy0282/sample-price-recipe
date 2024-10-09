@@ -36,7 +36,7 @@ class DemoApplicationTests {
 		profilingRequestDTO.setProfileName("TestProfile");
 		profilingRequestDTO.setLineItems(initLineItems());
 		profilingRequestDTO.setDiscountDetails(initDiscountDetails());
-        return profilingRequestDTO;
+		return profilingRequestDTO;
 	}
 
 	private List<DiscountDetails> initDiscountDetails() {
@@ -59,32 +59,30 @@ class DemoApplicationTests {
 		discountDetails6.setName("ListPrice");
 
 		return List.of(
-			discountDetails1,
-			discountDetails2,
-			discountDetails3,
-			discountDetails4,
-			discountDetails5,
-			discountDetails6
+				discountDetails1,
+				discountDetails2,
+				discountDetails3,
+				discountDetails4,
+				discountDetails5,
+				discountDetails6
 		);
 	}
 
 	private List<LineItem> initLineItems() {
-		List<LineItem> lineItems = List.of(
+        return List.of(
 				new LineItem("lineItem-1.1", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2024", 50.0, "ProductA"),
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2024", 50.0, "ProductA"),
 				new LineItem("lineItem-1.2", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2024", 10.0, "ProductA"),
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2024", 10.0, "ProductA"),
 				new LineItem("lineItem-1.3", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2024", 10.0, "ProductA"),
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2024", 10.0, "ProductA"),
 				new LineItem("lineItem-2.1", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2025", 10.0, "ProductA"),
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2025", 10.0, "ProductA"),
 				new LineItem("lineItem-2.2", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2025", 10.0, "ProductA"),
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2025", 10.0, "ProductA"),
 				new LineItem("lineItem-3", "ModelA", "Weekly", "Tag1", "Category1", "Family1",
-						100.0, "Configuration1", "2025", 1.0, "ProductB")
+						100.0, 100.0,100.0,100.0,100.0, "Configuration1", "2025", 1.0, "ProductB")
 		);
-
-		return lineItems;
 	}
 
 	private List<PriceProfileStep> initProfileSteps() {

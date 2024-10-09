@@ -19,6 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Product {
+	private String id;
 	private static final long serialVersionUID = 6529249104361519153L;
 	private String productFamilyId;
 	private String productFamily;

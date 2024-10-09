@@ -1,9 +1,11 @@
-package com.example.demo.service;
+package com.example.demo.services;
 
 import com.example.demo.models.Category;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.Product;
 import com.example.demo.models.Tag;
+
+import java.util.List;
 
 // MODIFY this code in real use case
 public class LineItemService {
@@ -11,12 +13,13 @@ public class LineItemService {
     public static Tag tagTrue = new Tag(){
         {
             setBg("CNS");
+            setValue(List.of("CNS", "ABC"));
         }
     };
 
     public static Product prodTrue = new Product(){
         {
-            setType("standalone");
+            setType("standalon"); // typo on purpose
             setTag(tagTrue);
         }
     };
@@ -24,6 +27,13 @@ public class LineItemService {
     public static Category categoryTrue = new Category(){
         {
             setName("Hardware Product");
+        }
+    };
+
+    public static LineItem lineItemTrue = new LineItem(){
+        {
+            setQuantity(12d);
+            setLocationName("HYDERABAD");
         }
     };
 
@@ -40,12 +50,6 @@ public class LineItemService {
 
     public static LineItem getLineItemById(String id) {
         // fetch the tag from the database
-//        return new LineItem(){
-//            {
-//                setQuantity(12);
-//                setLocationName("HYDERABAD");
-//            }
-//        };
-        return null; //todo: temp
+        return lineItemTrue;
     }
 }
