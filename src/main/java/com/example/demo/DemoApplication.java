@@ -6,6 +6,7 @@ import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
+import com.example.demo.service.BuyXGetYService;
 import com.example.demo.service.CumulativeRangeService;
 import com.example.demo.service.SimplePricingService;
 import com.example.demo.service.VoucherService;
@@ -23,6 +24,8 @@ public class DemoApplication {
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 	private static final SimplePricingService SIMPLE_PRICING_SERVICE = new SimplePricingService();
 	private static final VoucherService VOUCHER_AUDIT_SERVICE = new VoucherService();
+
+	private static final BuyXGetYService BUY_X_GET_Y_SERVICE = new BuyXGetYService();
 
 	public static void main(String[] args) {}
 
@@ -54,7 +57,7 @@ public class DemoApplication {
 						if (Objects.equals(recipe.getType(), "voucher")) {
 							VOUCHER_AUDIT_SERVICE.calculateVoucher(recipe, profilingRequestDTO);
 						} else if (Objects.equals(recipe.getType(), "buyXGetY")) {
-							// code block
+							BUY_X_GET_Y_SERVICE.calculatePriceOneOff(recipe, profilingRequestDTO);
 						}
 						break;
 					case "range":
