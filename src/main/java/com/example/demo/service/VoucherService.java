@@ -17,20 +17,18 @@ public class VoucherService {
         Voucher voucher = priceRecipe.getVoucher();
 
         if(voucher != null) {
+            if(voucher.getIsUsed()){
+                return;
+            }
             // Convert timestamps to LocalDate for comparison
             LocalDate voucherStartDate = Instant.ofEpochMilli(voucher.getStartDate()).atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate voucherEndDate = Instant.ofEpochMilli(voucher.getEndDate()).atZone(ZoneId.systemDefault()).toLocalDate();
 
-            for (LineItem item : lineItems) {
-                // 1.1 Check if currentDate is in between VoucherStartDate + VoucherEndDate
-                if (!isDateWithinRange(currentDate, voucherStartDate, voucherEndDate)) {
-                    continue; // Move to next lineItem if out of date
-                }
+            if (!isDateWithinRange(currentDate, voucherStartDate, voucherEndDate)) {
+                return;
+            }
 
-                // 1.2 Check if the Voucher is already used or not
-                if (isVoucherUsed(priceRecipe)) {
-                    continue; // Move to next lineItem if voucher is already used
-                }
+            for (LineItem item : lineItems) {
 
                 // 1.3 Execute the formula in PricingCondition & AppliedOn
                 if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item.getId()) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item.getId())) {
@@ -62,11 +60,6 @@ public class VoucherService {
                 }
             }
         }
-    }
-
-
-    private boolean isVoucherUsed(PriceRecipe priceRecipe) {
-        return priceRecipe.getVoucher() != null && priceRecipe.getVoucher().getIsUsed();
     }
 
     private void updateVoucherState(PriceRecipe priceRecipe, Voucher voucher) {
