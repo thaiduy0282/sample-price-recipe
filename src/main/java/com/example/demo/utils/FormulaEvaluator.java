@@ -92,10 +92,11 @@ public class FormulaEvaluator {
 
         for (String targetObject : targetObjects) {
             switch (targetObject){
-                case Constants.LINE_ITEM_PROPERTY -> context.put(Constants.LINE_ITEM_PROPERTY, lineItem);
-                case Constants.CATEGORY_PROPERTY  -> getContextForCategory(lineItem, context);
+                case Constants.LINE_ITEM_PROPERTY -> context.put(Constants.LINE_ITEM_PROPERTY, lineItem); // init data for line item
+                case Constants.CATEGORY_PROPERTY  -> getContextForCategory(lineItem, context); // specific for category property only
                 default -> {
                     try {
+                        // dynamic fetching object base on propertyId in the line item
                         Map<String, Object> filter = getStringObjectMap(lineItem, targetObject);
                         CosmosDbService.addEntityToContext(targetObject, filter, context);
                     } catch (NoSuchFieldException e) {

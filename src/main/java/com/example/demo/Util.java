@@ -107,6 +107,7 @@ public class Util {
         return switch (dealStrategy.toLowerCase()) {
             case "discount" -> applyDiscount(price, applicationType, adjustmentValue);
             case "markup" -> applyMarkup(price, applicationType, adjustmentValue);
+            case "updatevalue" -> adjustmentValue;
             default ->
                 // If no valid dealStrategy is provided, return the original price
                     price;

@@ -11,16 +11,14 @@ import java.util.List;
 public class VoucherService {
 
     public void calculateVoucher(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequest) {
-        List<LineItem> lineItems = profilingRequest.getLineItems();
-        LocalDate currentDate = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDate();
-
         Voucher voucher = priceRecipe.getVoucher();
-
         if(voucher != null) {
             if(voucher.getIsUsed()){
                 return;
             }
+
             // Convert timestamps to LocalDate for comparison
+            LocalDate currentDate = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate voucherStartDate = Instant.ofEpochMilli(voucher.getStartDate()).atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate voucherEndDate = Instant.ofEpochMilli(voucher.getEndDate()).atZone(ZoneId.systemDefault()).toLocalDate();
 
@@ -28,18 +26,19 @@ public class VoucherService {
                 return;
             }
 
+            List<LineItem> lineItems = profilingRequest.getLineItems();
             for (LineItem item : lineItems) {
 
-                // 1.3 Execute the formula in PricingCondition & AppliedOn
+                // Execute the formula in PricingCondition & AppliedOn
                 if (!Util.isValidFormula(priceRecipe.getPricingCondition(), item) || !Util.isValidFormula(priceRecipe.getAppliedOn(), item)) {
                     continue; // Move to next lineItem if the formula is false
                 }
 
                 // Get the latest discount detail for this LineItem and pricing context
                 DiscountDetails latestDiscount = Util.findLatestDiscountDetail(item.getId(), priceRecipe.getPriceApplicationON(), profilingRequest);
+
                 // Only apply adjustments if there are existing discounts
                 if (latestDiscount != null) {
-
                     // Calculate the adjusted price using the deal strategy and application details from the PriceRecipeRange
                     double adjustedPrice = Util.calculateAdjustedPrice(
                             latestDiscount.getAfterAdjustment(),
@@ -54,8 +53,10 @@ public class VoucherService {
                     // Create and add a new DiscountDetails entry to the profiling request
                     Util.createAndAddDiscountDetails(item, latestDiscount.getAfterAdjustment(), adjustedPrice, nextSequence, priceRecipe, profilingRequest);
 
+                    // create voucherAudit to keep track the voucher usage then call the function to save to DB
                     createVoucherAudit(item, voucher);
 
+                    // set the voucher is used to true => call the function save the recipe to DB
                     updateVoucherState(priceRecipe, voucher);
                 }
             }
@@ -65,6 +66,7 @@ public class VoucherService {
     private void updateVoucherState(PriceRecipe priceRecipe, Voucher voucher) {
         voucher.setIsUsed(true);
         priceRecipe.setVoucher(voucher);
+
         //call the service to save PriceRecipe to db
     }
 
