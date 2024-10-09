@@ -2,10 +2,7 @@ package com.example.demo.models;
 
 import ai.qworks.dao.base.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
@@ -14,8 +11,7 @@ import java.util.Objects;
 )
 @Entity
 @Table(
-        name = "voucheraudit",
-        comment = "VoucherAudit"
+        name = "voucheraudit"
 )
 public class VoucherAudit extends BaseEntity{
 
