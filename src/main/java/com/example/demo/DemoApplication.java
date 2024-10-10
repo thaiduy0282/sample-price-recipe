@@ -9,6 +9,7 @@ import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.CumulativeRangeService;
+import com.example.demo.service.PhaseRecurrentService;
 import com.example.demo.service.SimplePricingService;
 import com.example.demo.service.VoucherService;
 import com.example.demo.utils.FormulaEvaluator;
@@ -26,6 +27,8 @@ public class DemoApplication {
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 	private static final SimplePricingService SIMPLE_PRICING_SERVICE = new SimplePricingService();
 	private static final VoucherService VOUCHER_AUDIT_SERVICE = new VoucherService();
+
+	private static final PhaseRecurrentService PHASE_RECURRENT_SERVICE = new PhaseRecurrentService();
 
 	public static void main(String[] args) {
 		LineItem lineItem = new LineItem(){
@@ -73,6 +76,8 @@ public class DemoApplication {
 					case "range":
 						if (Objects.equals(recipe.getType(), "cumulativeRange")) {
 							CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
+						} else if ("phaseRecurrent".equalsIgnoreCase(recipe.getType())) {
+							PHASE_RECURRENT_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
 						} else {
 							// code block
 						}
