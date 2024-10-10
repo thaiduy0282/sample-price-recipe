@@ -1,14 +1,12 @@
 package com.example.demo.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder(toBuilder = true)
 public class LineItem  {
 	private static final long serialVersionUID = 8204041143290681328L;
 	private String id;
@@ -27,4 +25,5 @@ public class LineItem  {
 	private Double quantity;
 	private String productId;
 	private String locationName;
+	private Long startDate;
 }

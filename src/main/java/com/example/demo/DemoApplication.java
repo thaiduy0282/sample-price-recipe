@@ -1,15 +1,19 @@
 package com.example.demo;
 
+import com.example.demo.models.LineItem;
 import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.PriceList;
+
 import com.example.demo.models.PriceListItem;
 import com.example.demo.models.PriceProfileStep;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.service.BuyXGetYService;
 import com.example.demo.service.CumulativeRangeService;
+import com.example.demo.service.PhaseRecurrentService;
 import com.example.demo.service.SimplePricingService;
 import com.example.demo.service.VoucherService;
+import com.example.demo.utils.FormulaEvaluator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Comparator;
@@ -24,11 +28,20 @@ public class DemoApplication {
 	private static final CumulativeRangeService CUMULATIVE_RANGE_SERVICE = new CumulativeRangeService();
 	private static final SimplePricingService SIMPLE_PRICING_SERVICE = new SimplePricingService();
 	private static final VoucherService VOUCHER_AUDIT_SERVICE = new VoucherService();
-
 	private static final BuyXGetYService BUY_X_GET_Y_SERVICE = new BuyXGetYService();
+	private static final PhaseRecurrentService PHASE_RECURRENT_SERVICE = new PhaseRecurrentService();
 
-	public static void main(String[] args) {}
+	public static void main(String[] args) {
+		LineItem lineItem = new LineItem(){
+			{
+				setId("id2");
+				setProductId("productId");
+			}
+		};
 
+		String formula = "lineItem.id == 'id2' && product.type == 'standalon'";
+		System.out.println("res2: " + FormulaEvaluator.evaluateFormula(formula, lineItem));
+	}
 
 	public static List<DiscountDetails> executeVolume(List<PriceProfileStep> steps, ProfilingRequestDTO profilingRequestDTO, Map<String, List<PriceListItem>> priceListItemMap, Map<String, List<PriceList>> priceListById) {
 		// Fetching all the recipes
@@ -63,6 +76,8 @@ public class DemoApplication {
 					case "range":
 						if (Objects.equals(recipe.getType(), "cumulativeRange")) {
 							CUMULATIVE_RANGE_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
+						} else if ("phaseRecurrent".equalsIgnoreCase(recipe.getType())) {
+							PHASE_RECURRENT_SERVICE.calculateCumulativeRange(recipe, profilingRequestDTO);
 						} else {
 							// code block
 						}

@@ -4,12 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
 @Getter
@@ -19,7 +14,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
-
+@Builder(toBuilder = true)
 public class PriceRecipe {
 
 	private String id;
@@ -37,9 +32,7 @@ public class PriceRecipe {
 	private String priceAppliedTo;
 	private String dimension;
 	private List<PriceRecipeRange> ranges;
-	private String voucherCode;
-	private Long voucherStartDate;
-	private Long voucherEndDate;
+	private Voucher voucher;
 
 	//region: Setup BuyXGetY
 	// Buy Section: Defines the conditions for triggering the reward
