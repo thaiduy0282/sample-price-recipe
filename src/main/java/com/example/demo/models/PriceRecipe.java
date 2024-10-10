@@ -34,4 +34,12 @@ public class PriceRecipe {
 	private List<PriceRecipeRange> ranges;
 	private Voucher voucher;
 
+	//region: Setup BuyXGetY
+	// Buy Section: Defines the conditions for triggering the reward
+	private BuySection buySection;
+
+	// Get Section: Defines the rewards to be applied if the BuySection is satisfied
+	private GetSection getSection;
+	//endregion
+
 }
