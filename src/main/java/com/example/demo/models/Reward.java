@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 
 @Getter
 @Setter
@@ -19,6 +17,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 
-public class GetSection {
-	private List<Reward> rewards; // List of rewards to apply when conditions are met
+public class Reward {
+
+	private String rewardExpression; // e.g., "product.name=abc && product.quantity=1"
+	private String rewardType;         // e.g., "percentageDiscount" or "fixedDiscount"
+	private double rewardValue;        // Discount value (e.g., 100% or $20)
+	private double maxDiscount;        // Maximum discount limit (optional)
 }

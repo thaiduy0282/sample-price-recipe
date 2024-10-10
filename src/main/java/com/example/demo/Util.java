@@ -1,6 +1,10 @@
 package com.example.demo;
 
-import com.example.demo.models.*;
+import com.example.demo.models.DiscountDetails;
+import com.example.demo.models.LineItem;
+import com.example.demo.models.PriceRecipe;
+import com.example.demo.models.PriceRecipeRange;
+import com.example.demo.models.ProfilingRequestDTO;
 import com.example.demo.utils.FormulaEvaluator;
 import org.springframework.util.StringUtils;
 
@@ -156,5 +160,30 @@ public class Util {
     public static boolean isValidFormula(String formula, LineItem lineItem) {
         return !StringUtils.hasLength(formula) ||
                 FormulaEvaluator.evaluateFormula(formula, lineItem);
+    }
+
+    public static double calculateAdjustedPriceWithLimit(Double price, String dealStrategy, String rewardType, double maxAdjustValue, double applicationValue) {
+        double adjustmentValue;
+        double adjustedPrice = price;
+
+        switch (rewardType) {
+            case "Percentage" -> // Apply percentage-based
+                    adjustmentValue = (price * (applicationValue / 100));
+            case "Amount" -> // Apply fixed amount-based
+                    adjustmentValue = applicationValue;
+            default -> throw new IllegalStateException("Unexpected value: " + rewardType);
+        }
+
+        if (maxAdjustValue > 0) {
+            adjustmentValue = Math.min(adjustmentValue, maxAdjustValue);
+        }
+
+        if ("discount".equalsIgnoreCase(dealStrategy)) {
+            adjustedPrice = price - adjustmentValue;
+        } else if ("markup".equalsIgnoreCase(dealStrategy)) {
+            adjustedPrice = price + adjustmentValue;
+        }
+
+        return  adjustedPrice;
     }
 }

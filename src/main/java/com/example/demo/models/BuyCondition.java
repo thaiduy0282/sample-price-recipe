@@ -1,10 +1,13 @@
 package com.example.demo.models;
 
+import com.example.demo.common.LogicalOperator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
-
-import java.util.List;
-
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -14,9 +17,6 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class BuyCondition {
-	private String conditionType; // e.g., "buyItem", "buyMoreThanPrice", "buyMoreThanQuantity", "buyDifferentItems"
-	private String itemId; // For "buyItem" or "buyMoreThanQuantity"
-	private double thresholdAmount; // For "buyMoreThanPrice"
-	private int quantity; // For "buyMoreThanQuantity"
-	private List<String> differentItemIds; // For "buyDifferentItems"
+	private String expression; // e.g., "product.name=abc && product.quantity>3"
+	private LogicalOperator logicalOperator; // AND or OR for combining conditions
 }
