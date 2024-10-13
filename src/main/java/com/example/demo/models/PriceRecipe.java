@@ -2,6 +2,9 @@ package com.example.demo.models;
 
 import java.util.List;
 
+import com.example.demo.models.buyXGetY.BuyConditionGroup;
+import com.example.demo.models.buyXGetY.BuySection;
+import com.example.demo.models.buyXGetY.GetSection;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.*;
@@ -35,11 +38,6 @@ public class PriceRecipe {
 	private Voucher voucher;
 
 	//region: Setup BuyXGetY
-	// Buy Section: Defines the conditions for triggering the reward
-	private BuySection buySection;
-
-	// Get Section: Defines the rewards to be applied if the BuySection is satisfied
-	private GetSection getSection;
-	//endregion
+    private List<BuyConditionGroup> conditionGroups;
 
 }

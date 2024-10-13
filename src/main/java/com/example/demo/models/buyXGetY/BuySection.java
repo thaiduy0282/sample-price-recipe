@@ -1,7 +1,12 @@
-package com.example.demo.models;
+package com.example.demo.models.buyXGetY;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -15,5 +20,5 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 
 public class BuySection {
-	private List<BuyCondition> buyConditions; // List of buy conditions to meet the deal
+    private List<Condition> conditions;
 }

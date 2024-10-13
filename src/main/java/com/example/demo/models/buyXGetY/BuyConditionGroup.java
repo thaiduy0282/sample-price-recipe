@@ -1,4 +1,4 @@
-package com.example.demo.models;
+package com.example.demo.models.buyXGetY;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,10 +16,11 @@ import lombok.Setter;
 @Data
 @EqualsAndHashCode(callSuper = false)
 
-public class Reward {
+public class BuyConditionGroup {
+    // Buy Section: Defines the conditions for triggering the adjustment
+    private BuySection buySection;
 
-	private String rewardExpression; // e.g., "product.name=abc && product.quantity=1"
-	private String rewardType;         // e.g., "percentageDiscount" or "fixedDiscount"
-	private double rewardValue;        // Discount value (e.g., 100% or $20)
-	private double maxDiscount;        // Maximum discount limit (optional)
+    // Get Section: Defines the adjustment to be applied if the BuySection is satisfied
+    private GetSection getSection;
+    //endregion
 }

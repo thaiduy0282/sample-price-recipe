@@ -1,85 +1,81 @@
 package com.example.demo.service;
 
 import com.example.demo.Util;
-import com.example.demo.common.LogicalOperator;
-import com.example.demo.models.BuyCondition;
 import com.example.demo.models.DiscountDetails;
 import com.example.demo.models.LineItem;
 import com.example.demo.models.PriceRecipe;
 import com.example.demo.models.ProfilingRequestDTO;
-import com.example.demo.models.Reward;
+import com.example.demo.models.buyXGetY.Adjustment;
+import com.example.demo.models.buyXGetY.BuyConditionGroup;
+import com.example.demo.models.buyXGetY.Condition;
+import lombok.val;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BuyXGetYService {
 
-    public void calculatePriceOneOff(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+    public void calculatePriceOneOff(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
         List<LineItem> lineItems = profilingRequestDTO.getLineItems();
-        // Check if the buy conditions are satisfied
-        boolean canApplyReward = evaluateBuyConditions(recipe.getBuySection().getBuyConditions(), lineItems);
 
-        if (canApplyReward) {
-            // Apply the rewards from the GetSection
-            applyRewards(recipe.getGetSection().getRewards(), recipe, profilingRequestDTO);
-        }
-    }
+        // Collect all possible adjustments from the recipe
+        Map<Adjustment, Double> possibleAdjustments = calculateAllPossibleAdjustments(priceRecipe, profilingRequestDTO);
 
-    private boolean evaluateBuyConditions(List<BuyCondition> buyConditions, List<LineItem> lineItems) {
-        boolean result = false;
+        // Sort adjustments by their total value to maximize discounts or minimize markups
+        List<Map.Entry<Adjustment, Double>> possibleAdjustmentsSorted = possibleAdjustments.entrySet().stream()
+            .sorted((adjustment1, adjustment2) -> Double.compare(adjustment2.getValue(), adjustment1.getValue())) // Descending order
+            .toList(); // Collect to list
 
-        for (BuyCondition condition : buyConditions) {
-            boolean conditionResult = evaluateConditionFormula(condition.getExpression(), lineItems);
-
-            // Combine with logical operator (AND/OR)
-            if (LogicalOperator.AND == condition.getLogicalOperator()) {
-                result = result && conditionResult;
-            } else if (LogicalOperator.OR == condition.getLogicalOperator()) {
-                result = result || conditionResult;
-            } else {
-                // For the first condition
-                result = conditionResult;
-            }
-        }
-        return result;
-    }
-
-    private boolean evaluateConditionFormula(String expression, List<LineItem> lineItems) {
-        for (LineItem item : lineItems) {
-            // Extract the metadata and value to evaluate (e.g., "product.name=abc")
-            var result = Util.isValidFormula(expression, item);
-            if (result) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void applyRewards(List<Reward> rewards, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
-        List<LineItem> lineItems = profilingRequestDTO.getLineItems();
-        List<Reward> availableRewards = new ArrayList<>(rewards);  // Copy of rewards to modify
-
-
-        for (LineItem item : lineItems) {
-            for (Reward reward : availableRewards) {
-                boolean rewardConditionMet = Util.isValidFormula(reward.getRewardExpression(), item);
-
-                if (rewardConditionMet) {
-                    applyReward(item, reward, priceRecipe, profilingRequestDTO);
-
-                    // Remove the reward from the available list after applying it to one line item
-                    availableRewards.remove(reward);
-                    break;  // Exit the loop since the reward is applied
-                }
-            }
+        // Apply the best adjustment to the cart
+        if (!possibleAdjustments.isEmpty()) {
+            Adjustment bestAdjustment = possibleAdjustmentsSorted.getFirst().getKey();
+            System.out.println("Applying best adjustment: " + bestAdjustment);
+            applyAdjustment(lineItems, bestAdjustment, priceRecipe, profilingRequestDTO);
         }
     }
 
     /**
-     * fixed discount amounts
-     *
+     * Find all possible adjustments from the recipe.
      */
-    private void applyReward(LineItem item, Reward reward, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
+    private Map<Adjustment, Double> calculateAllPossibleAdjustments(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+        Map<Adjustment, Double> adjustments = new HashMap<>();
+        List<LineItem> lineItems = profilingRequestDTO.getLineItems();
+
+        for (BuyConditionGroup group : recipe.getConditionGroups()) {
+            val conditions = group.getBuySection().getConditions();
+            if (isSatisfied(lineItems, conditions)) {
+                int applicableTimes = maxApplicableTimes(lineItems, conditions);
+                adjustments.putAll(Util.createAdjustment(recipe, profilingRequestDTO, group, applicableTimes));
+            }
+        }
+        return adjustments;
+    }
+
+    /**
+     * Apply the given adjustment to the lineItems.
+     */
+    private void applyAdjustment(List<LineItem> lineItems, Adjustment adjustment, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
+        for (LineItem item : lineItems) {
+            if (item.getProductId().equals(adjustment.getProductId())) {
+                applyBestAdjustment(item, adjustment, priceRecipe, profilingRequestDTO);
+            }
+        }
+    }
+
+    public boolean isSatisfied(List<LineItem> cart, List<Condition> buyConditions) {
+        return buyConditions.stream().allMatch(condition -> Util.matchesCondition(condition, cart));
+    }
+
+    public int maxApplicableTimes(List<LineItem> cart, List<Condition> buyConditions) {
+        return buyConditions.stream()
+            .mapToInt(condition -> Util.maxApplicableTimes(cart, condition))
+            .min()
+            .orElse(0);
+    }
+
+    private void applyBestAdjustment(LineItem item, Adjustment adjustment, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
         // Get the latest discount detail for this LineItem and pricing context
         DiscountDetails latestDiscount = Util.findLatestDiscountDetail(item.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
 
@@ -90,9 +86,9 @@ public class BuyXGetYService {
             double adjustedPrice = Util.calculateAdjustedPriceWithLimit(
                     latestDiscount.getAfterAdjustment(),
                     priceRecipe.getDealStrategy(), // Discount
-                    reward.getRewardType(), // Percent or Amount
-                    reward.getMaxDiscount(), // Max discount
-                    reward.getRewardValue()
+                    priceRecipe.getApplicationType(), // Percent or Amount
+                    adjustment.getMaxAdjustmentAmount(), // Max adjustment
+                    adjustment.getValue()
             );
 
             // Determine the next sequence number for the discount
