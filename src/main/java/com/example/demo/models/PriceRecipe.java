@@ -2,6 +2,9 @@ package com.example.demo.models;
 
 import java.util.List;
 
+import com.example.demo.models.buyXGetY.BuyConditionGroup;
+import com.example.demo.models.buyXGetY.BuySection;
+import com.example.demo.models.buyXGetY.GetSection;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.*;
@@ -33,5 +36,8 @@ public class PriceRecipe {
 	private String dimension;
 	private List<PriceRecipeRange> ranges;
 	private Voucher voucher;
+
+	//region: Setup BuyXGetY
+    private List<BuyConditionGroup> conditionGroups;
 
 }
