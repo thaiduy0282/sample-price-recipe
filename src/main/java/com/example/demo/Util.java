@@ -9,7 +9,6 @@ import com.example.demo.models.buyXGetY.Adjustment;
 import com.example.demo.models.buyXGetY.BuyConditionGroup;
 import com.example.demo.models.buyXGetY.Condition;
 import com.example.demo.utils.FormulaEvaluator;
-import lombok.val;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -19,6 +18,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.lang.Math.abs;
 
 public class Util {
 
@@ -170,9 +171,9 @@ public class Util {
                 FormulaEvaluator.evaluateFormula(formula, lineItem);
     }
 
-    public static double calculateAdjustedPriceWithLimit(Double price, String dealStrategy, String applicationType, double maxAdjustValue, double applicationValue) {
+    public static double calculateAdjustedPriceWithLimit(Double price, String dealStrategy, String applicationType, double applicationValue) {
         double adjustedPrice = price;
-        double adjustmentValue = getAdjustmentValue(price, applicationType, maxAdjustValue, applicationValue);
+        double adjustmentValue = getAdjustmentValue(price, applicationType, applicationValue);
 
         if ("discount".equalsIgnoreCase(dealStrategy)) {
             adjustedPrice = Math.max(0, price - adjustmentValue);
@@ -183,7 +184,7 @@ public class Util {
         return  adjustedPrice;
     }
 
-    private static double getAdjustmentValue(Double price, String applicationType, double maxAdjustValue, double applicationValue) {
+    private static double getAdjustmentValue(Double price, String applicationType, double applicationValue) {
         double adjustmentValue;
 
         switch (applicationType) {
@@ -194,23 +195,24 @@ public class Util {
             default -> throw new IllegalStateException("Unexpected value: " + applicationType);
         }
 
-        if (maxAdjustValue != 0) {
-            adjustmentValue = Math.min(adjustmentValue, maxAdjustValue);
-        }
         return adjustmentValue;
     }
 
     public static boolean matchesCondition(Condition condition, List<LineItem> item) {
         return item.stream()
             .anyMatch(i ->
-                i.getProductId().equals(condition.getObjectId())
-                    && i.getQuantity().intValue() >= condition.getValue()
+                    matchesCondition(condition, i)
             );
+    }
+
+    private static boolean matchesCondition(Condition condition, LineItem i) {
+        return i.getProductId().equals(condition.getObjectId())
+                && i.getQuantity().intValue() >= condition.getValue();
     }
 
     public static int maxApplicableTimes(List<LineItem> lineItems, Condition condition) {
         return lineItems.stream()
-            .filter(item -> item.getProductId().equals(condition.getObjectId()))
+            .filter(item -> matchesCondition(condition, item))
             .mapToInt(item -> (int) (item.getQuantity() / condition.getValue()))
             .findFirst()
             .orElse(0);
@@ -218,12 +220,18 @@ public class Util {
 
     public static Map<Adjustment, Double> createAdjustment(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO, BuyConditionGroup buyConditionGroup, int times) {
         // TODO: Just calculate based on first adjustment for now
+        // Get the first adjustment from the group
         Adjustment adjustment = buyConditionGroup.getGetSection().getAdjustments().getFirst();
+
+        // Find the matching LineItem from the cart
         List<LineItem> lineItems = profilingRequestDTO.getLineItems();
-        LineItem lineItem = lineItems.stream().filter(item -> item.getProductId().equals(adjustment.getProductId())).findFirst().orElse(null);
+        LineItem lineItem = lineItems.stream()
+                .filter(item -> item.getProductId().equals(adjustment.getProductId()))
+                .findFirst()
+                .orElse(null);
 
         if (lineItem == null) {
-            return Collections.emptyMap();
+            return Collections.emptyMap(); // No matching product, return empty map
         }
 
         // Get the latest discount detail for this LineItem and pricing context
@@ -232,21 +240,62 @@ public class Util {
             latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
         } catch (Exception e) {
             // handle log for exception or just ignore it
+            // Mockup latest Discount for testing
+            latestDiscount = new DiscountDetails();
+            latestDiscount.setAfterAdjustment(lineItem.getNetPrice());
         }
 
-        val priceAfterAdjustment = latestDiscount != null ? latestDiscount.getAfterAdjustment() : lineItem.getNetPrice();
-        if (times > 1) {
-            adjustment.setValue(adjustment.getValue() * times);
+        if (latestDiscount != null) {
+            Double priceAfterAdjustment = latestDiscount.getAfterAdjustment();
+
+            double adjustmentValue = calculateAdjustmentValue(
+                    priceAfterAdjustment,
+                    adjustment.getDealStrategy(),
+                    adjustment.getApplicationType(),
+                    adjustment.getApplicationValue(),
+                    lineItem.getQuantity().intValue(),
+                    adjustment.getRequiredQuantity(),
+                    times
+            );
+
+            // Store the adjustment in a map
+            Map<Adjustment, Double> adjustmentMap = new HashMap<>();
+            adjustment.setApplicationValue(abs(adjustmentValue));
+            adjustmentMap.put(adjustment, adjustmentValue);
+
+            return adjustmentMap;
+        } else {
+            throw new IllegalStateException("Could not found latest discount!");
         }
-        // Calculate the adjustmentValue
-        double adjustmentValue = getAdjustmentValue(priceAfterAdjustment,
-            priceRecipe.getApplicationType(), // Percent or Amount
-            adjustment.getMaxAdjustmentAmount(), // Max adjustment
-            adjustment.getValue());
+    }
 
-        Map<Adjustment, Double> adjustmentMap = new HashMap<>();
-        adjustmentMap.put(adjustment, adjustmentValue);
+    /**
+     * Calculate the adjustment value based on strategy, application type, and quantity.
+     */
+    private static double calculateAdjustmentValue(
+            double priceAfterAdjustment,
+            String dealStrategy,
+            String applicationType,
+            double applicationValue,
+            int lineItemQuantity,
+            int requiredQuantity,
+            int times) {
 
-        return adjustmentMap;
+        // Calculate the total units to adjust (cap at requiredQuantity)
+        int applicableUnits = Math.min(lineItemQuantity, requiredQuantity * times);
+
+        double totalAdjustmentValue = switch (applicationType) {
+            case "Percentage" -> {
+                double percentageValue = (priceAfterAdjustment * applicationValue) / 100.0;
+                yield percentageValue * applicableUnits;
+            }
+            case "Fixed Amount" -> applicationValue * applicableUnits;
+            default -> throw new IllegalArgumentException("Invalid application type: " + applicationType);
+        };
+
+        // Adjust the value based on the strategy (Discount or Markup)
+        return dealStrategy.equalsIgnoreCase("Discount")
+                ? -totalAdjustmentValue
+                : totalAdjustmentValue;
     }
 }
