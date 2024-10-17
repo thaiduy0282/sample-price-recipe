@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
-class SimplePricingServiceTest {
+class BuyXGetYServiceTest {
     private final BuyXGetYService service = new BuyXGetYService();
 
     @Test
@@ -30,12 +30,12 @@ class SimplePricingServiceTest {
         BuyConditionGroup group1 = new BuyConditionGroup(
             new BuySection(List.of(new Condition("iPhone", 2),
                 new Condition("iPad", 1))),
-            new GetSection(List.of(new Adjustment("Samsung", 100.0, 0)))
+            new GetSection(List.of(new Adjustment("Samsung", "Discount", "Percentage", 4, 100.0)))
         );
 
         BuyConditionGroup group2 = new BuyConditionGroup(
-            new BuySection(List.of(new Condition("Samsung", 2))),
-            new GetSection(List.of(new Adjustment("Samsung", 100.0, 0)))
+            new BuySection(List.of(new Condition("Samsung", 6))),
+            new GetSection(List.of(new Adjustment("Samsung", "Discount", "Percentage", 3, 100.0)))
         );
 
         // Create the recipe

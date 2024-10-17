@@ -20,7 +20,9 @@ import lombok.Setter;
 public class Adjustment {
 
     private String productId;            // Apply adjustment to a specific product line item
-    private double value;                 // Percentage or Fixed Amount
-    private double maxAdjustmentAmount;   // Limit on total adjustment amount per line item (optional)
+    private String dealStrategy;        // Discount or Markup
+    private String applicationType;     // Percentage or Fixed Amount
+    private int requiredQuantity;    // Max item apply adjustment once
+    private double applicationValue;
 
 }

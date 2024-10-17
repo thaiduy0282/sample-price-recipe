@@ -10,7 +10,6 @@ import com.example.demo.models.buyXGetY.BuyConditionGroup;
 import com.example.demo.models.buyXGetY.Condition;
 import lombok.val;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ public class BuyXGetYService {
 
         // Sort adjustments by their total value to maximize discounts or minimize markups
         List<Map.Entry<Adjustment, Double>> possibleAdjustmentsSorted = possibleAdjustments.entrySet().stream()
-            .sorted((adjustment1, adjustment2) -> Double.compare(adjustment2.getValue(), adjustment1.getValue())) // Descending order
+            .sorted(Map.Entry.comparingByValue()) // Ascending order: Smallest adjustment first
             .toList(); // Collect to list
 
         // Apply the best adjustment to the cart
@@ -83,13 +82,7 @@ public class BuyXGetYService {
         if (latestDiscount != null) {
 
             // Calculate the adjusted price using the deal strategy and application details
-            double adjustedPrice = Util.calculateAdjustedPriceWithLimit(
-                    latestDiscount.getAfterAdjustment(),
-                    priceRecipe.getDealStrategy(), // Discount
-                    priceRecipe.getApplicationType(), // Percent or Amount
-                    adjustment.getMaxAdjustmentAmount(), // Max adjustment
-                    adjustment.getValue()
-            );
+            double adjustedPrice = adjustment.getApplicationValue();
 
             // Determine the next sequence number for the discount
             int nextSequence = latestDiscount.getSequence() + 1;
