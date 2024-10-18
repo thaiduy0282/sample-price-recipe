@@ -20,22 +20,29 @@ class BuyXGetYServiceTest {
     public void testBestAdjustment() {
         // Create sample line items (cart)
         LineItem iphone = createLineItem("1", "iPhone", 4, 100.0);
-        LineItem ipad = createLineItem("2", "iPad", 2, 70.0);
+        LineItem ipad = createLineItem("2", "iPad", 3, 70.0);
         LineItem samsung = createLineItem("3", "Samsung", 6, 50.0);
+        LineItem pen = createLineItem("4", "Pen", 10, 30.0);
 
-        List<LineItem> cart = Arrays.asList(iphone, ipad, samsung);
+        List<LineItem> cart = Arrays.asList(iphone, ipad, samsung, pen);
         ProfilingRequestDTO requestDTO = ProfilingRequestDTO.builder().lineItems(cart).build();
 
         // Create BuyConditionGroups for the recipe
         BuyConditionGroup group1 = new BuyConditionGroup(
             new BuySection(List.of(new Condition("iPhone", 2),
                 new Condition("iPad", 1))),
-            new GetSection(List.of(new Adjustment("Samsung", "Discount", "Percentage", 4, 100.0)))
+            new GetSection(List.of(
+                    new Adjustment("Samsung", "Discount", "Percentage", 4, 100.0),
+                    new Adjustment("Pen", "Discount", "Percentage", 1, 100.0)
+                    ))
         );
 
         BuyConditionGroup group2 = new BuyConditionGroup(
             new BuySection(List.of(new Condition("Samsung", 6))),
-            new GetSection(List.of(new Adjustment("Samsung", "Discount", "Percentage", 3, 100.0)))
+            new GetSection(List.of(
+                    new Adjustment("Samsung", "Discount", "Percentage", 3, 100.0),
+                    new Adjustment("Pen", "Discount", "Percentage", 3, 100.0)
+                    ))
         );
 
         // Create the recipe

@@ -9,6 +9,7 @@ import com.example.demo.models.buyXGetY.Adjustment;
 import com.example.demo.models.buyXGetY.BuyConditionGroup;
 import com.example.demo.models.buyXGetY.Condition;
 import com.example.demo.utils.FormulaEvaluator;
+import lombok.val;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -171,19 +172,6 @@ public class Util {
                 FormulaEvaluator.evaluateFormula(formula, lineItem);
     }
 
-    public static double calculateAdjustedPriceWithLimit(Double price, String dealStrategy, String applicationType, double applicationValue) {
-        double adjustedPrice = price;
-        double adjustmentValue = getAdjustmentValue(price, applicationType, applicationValue);
-
-        if ("discount".equalsIgnoreCase(dealStrategy)) {
-            adjustedPrice = Math.max(0, price - adjustmentValue);
-        } else if ("markup".equalsIgnoreCase(dealStrategy)) {
-            adjustedPrice = price + adjustmentValue;
-        }
-
-        return  adjustedPrice;
-    }
-
     private static double getAdjustmentValue(Double price, String applicationType, double applicationValue) {
         double adjustmentValue;
 
@@ -218,55 +206,61 @@ public class Util {
             .orElse(0);
     }
 
-    public static Map<Adjustment, Double> createAdjustment(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO, BuyConditionGroup buyConditionGroup, int times) {
+    public static Map<List<Adjustment>, Double> createAdjustment(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO, BuyConditionGroup buyConditionGroup, int times) {
         // TODO: Just calculate based on first adjustment for now
-        // Get the first adjustment from the group
-        Adjustment adjustment = buyConditionGroup.getGetSection().getAdjustments().getFirst();
 
-        // Find the matching LineItem from the cart
-        List<LineItem> lineItems = profilingRequestDTO.getLineItems();
-        LineItem lineItem = lineItems.stream()
-                .filter(item -> item.getProductId().equals(adjustment.getProductId()))
-                .findFirst()
-                .orElse(null);
+        val adjustments = buyConditionGroup.getGetSection().getAdjustments();
+        var totalAdjustmentValue = 0.0;
+        for (Adjustment adjustment : adjustments) {
+//        Adjustment adjustment = adjustments.getFirst();
 
-        if (lineItem == null) {
-            return Collections.emptyMap(); // No matching product, return empty map
+            // Find the matching LineItem from the cart
+            List<LineItem> lineItems = profilingRequestDTO.getLineItems();
+            LineItem lineItem = lineItems.stream()
+                    .filter(item -> item.getProductId().equals(adjustment.getProductId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (lineItem == null) {
+                return Collections.emptyMap(); // No matching product, return empty map
+            }
+
+            // Get the latest discount detail for this LineItem and pricing context
+            DiscountDetails latestDiscount = null;
+            try {
+                latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
+            } catch (Exception e) {
+                // handle log for exception or just ignore it
+                // Mockup latest Discount for testing
+                latestDiscount = new DiscountDetails();
+                latestDiscount.setAfterAdjustment(lineItem.getNetPrice());
+            }
+
+            if (latestDiscount != null) {
+                Double priceAfterAdjustment = latestDiscount.getAfterAdjustment();
+
+                double adjustmentValue = calculateAdjustmentValue(
+                        priceAfterAdjustment,
+                        adjustment.getDealStrategy(),
+                        adjustment.getApplicationType(),
+                        adjustment.getApplicationValue(),
+                        lineItem.getQuantity().intValue(),
+                        adjustment.getRequiredQuantity(),
+                        times
+                );
+                totalAdjustmentValue += adjustmentValue;
+                adjustment.setApplicationValue(abs(adjustmentValue));
+
+            } else {
+                throw new IllegalStateException("Could not found latest discount!");
+            }
         }
 
-        // Get the latest discount detail for this LineItem and pricing context
-        DiscountDetails latestDiscount = null;
-        try {
-            latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
-        } catch (Exception e) {
-            // handle log for exception or just ignore it
-            // Mockup latest Discount for testing
-            latestDiscount = new DiscountDetails();
-            latestDiscount.setAfterAdjustment(lineItem.getNetPrice());
-        }
+        // Store the adjustment in a map
+        Map<List<Adjustment>, Double> adjustmentMap = new HashMap<>();
+        adjustmentMap.put(adjustments, totalAdjustmentValue);
 
-        if (latestDiscount != null) {
-            Double priceAfterAdjustment = latestDiscount.getAfterAdjustment();
-
-            double adjustmentValue = calculateAdjustmentValue(
-                    priceAfterAdjustment,
-                    adjustment.getDealStrategy(),
-                    adjustment.getApplicationType(),
-                    adjustment.getApplicationValue(),
-                    lineItem.getQuantity().intValue(),
-                    adjustment.getRequiredQuantity(),
-                    times
-            );
-
-            // Store the adjustment in a map
-            Map<Adjustment, Double> adjustmentMap = new HashMap<>();
-            adjustment.setApplicationValue(abs(adjustmentValue));
-            adjustmentMap.put(adjustment, adjustmentValue);
-
-            return adjustmentMap;
-        } else {
-            throw new IllegalStateException("Could not found latest discount!");
-        }
+        return adjustmentMap;
     }
 
     /**
