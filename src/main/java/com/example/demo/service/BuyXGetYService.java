@@ -13,6 +13,7 @@ import lombok.val;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BuyXGetYService {
 
@@ -20,44 +21,69 @@ public class BuyXGetYService {
         List<LineItem> lineItems = profilingRequestDTO.getLineItems();
 
         // Collect all possible adjustments from the recipe
-        Map<Adjustment, Double> possibleAdjustments = calculateAllPossibleAdjustments(priceRecipe, profilingRequestDTO);
+        Map<List<Adjustment>, Double> possibleAdjustments = calculateAllPossibleAdjustments(priceRecipe, profilingRequestDTO);
 
         // Sort adjustments by their total value to maximize discounts or minimize markups
-        List<Map.Entry<Adjustment, Double>> possibleAdjustmentsSorted = possibleAdjustments.entrySet().stream()
+        List<Map.Entry<List<Adjustment>, Double>> possibleAdjustmentsSorted = possibleAdjustments.entrySet().stream()
             .sorted(Map.Entry.comparingByValue()) // Ascending order: Smallest adjustment first
             .toList(); // Collect to list
 
         // Apply the best adjustment to the cart
         if (!possibleAdjustments.isEmpty()) {
-            Adjustment bestAdjustment = possibleAdjustmentsSorted.getFirst().getKey();
-            System.out.println("Applying best adjustment: " + bestAdjustment);
-            applyAdjustment(lineItems, bestAdjustment, priceRecipe, profilingRequestDTO);
+            val bestListAdjustment = possibleAdjustmentsSorted.getFirst().getKey();
+            System.out.println("Applying best adjustment: " + bestListAdjustment);
+            applyAdjustment(lineItems, bestListAdjustment, priceRecipe, profilingRequestDTO);
         }
     }
 
     /**
      * Find all possible adjustments from the recipe.
      */
-    private Map<Adjustment, Double> calculateAllPossibleAdjustments(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
-        Map<Adjustment, Double> adjustments = new HashMap<>();
+    private Map<List<Adjustment>, Double> calculateAllPossibleAdjustments(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
+        Map<List<Adjustment>, Double> allAdjustments  = new HashMap<>();
         List<LineItem> lineItems = profilingRequestDTO.getLineItems();
 
-        for (BuyConditionGroup group : recipe.getConditionGroups()) {
-            val conditions = group.getBuySection().getConditions();
-            if (isSatisfied(lineItems, conditions)) {
-                int applicableTimes = maxApplicableTimes(lineItems, conditions);
-                adjustments.putAll(Util.createAdjustment(recipe, profilingRequestDTO, group, applicableTimes));
-            }
+        recipe.getConditionGroups().stream()
+            .filter(group -> isSatisfied(lineItems, group.getBuySection().getConditions())) // Check if the group is applicable
+            .forEach(group -> {
+                int applicableTimes = maxApplicableTimes(lineItems, group.getBuySection().getConditions(), recipe);
+
+                // Generate adjustments and add them to the result map
+                Map<List<Adjustment>, Double> adjustments = Util.createAdjustment(
+                    recipe, profilingRequestDTO, group, applicableTimes);
+
+                allAdjustments.putAll(adjustments);
+            });
+
+        return allAdjustments;
+    }
+
+    /**
+     * Calculate the max applicable times based on the PriceRecipe's aggregation strategy.
+     */
+    private int maxApplicableTimes(List<LineItem> lineItems, List<Condition> conditions, PriceRecipe recipe) {
+        int totalApplicableTimes = Integer.MAX_VALUE;
+
+        for (Condition condition : conditions) {
+            int applicableTimes = Util.maxApplicableTimes(lineItems, condition, recipe);
+            totalApplicableTimes = Math.min(totalApplicableTimes, applicableTimes);  // Ensure min times across all conditions
         }
-        return adjustments;
+
+        return totalApplicableTimes;
     }
 
     /**
      * Apply the given adjustment to the lineItems.
      */
-    private void applyAdjustment(List<LineItem> lineItems, Adjustment adjustment, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
+    private void applyAdjustment(List<LineItem> lineItems, List<Adjustment> adjustments, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {
+        // Create a map of productId -> Adjustment to quickly find the relevant adjustment for each product
+        Map<String, Adjustment> adjustmentMap = adjustments.stream()
+                .collect(Collectors.toMap(Adjustment::getProductId, adjustment -> adjustment));
+
         for (LineItem item : lineItems) {
-            if (item.getProductId().equals(adjustment.getProductId())) {
+            Adjustment adjustment = adjustmentMap.get(item.getProductId());
+
+            if (adjustment != null) {
                 applyBestAdjustment(item, adjustment, priceRecipe, profilingRequestDTO);
             }
         }
@@ -65,13 +91,6 @@ public class BuyXGetYService {
 
     public boolean isSatisfied(List<LineItem> cart, List<Condition> buyConditions) {
         return buyConditions.stream().allMatch(condition -> Util.matchesCondition(condition, cart));
-    }
-
-    public int maxApplicableTimes(List<LineItem> cart, List<Condition> buyConditions) {
-        return buyConditions.stream()
-            .mapToInt(condition -> Util.maxApplicableTimes(cart, condition))
-            .min()
-            .orElse(0);
     }
 
     private void applyBestAdjustment(LineItem item, Adjustment adjustment, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {

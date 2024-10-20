@@ -2,6 +2,7 @@ package com.example.demo.models;
 
 import java.util.List;
 
+import com.example.demo.common.AggregationStrategy;
 import com.example.demo.models.buyXGetY.BuyConditionGroup;
 import com.example.demo.models.buyXGetY.BuySection;
 import com.example.demo.models.buyXGetY.GetSection;
@@ -39,5 +40,7 @@ public class PriceRecipe {
 
 	//region: Setup BuyXGetY
     private List<BuyConditionGroup> conditionGroups;
+    private AggregationStrategy aggregationStrategy = AggregationStrategy.MAX;  // Default is MAX
+    // endregion
 
 }

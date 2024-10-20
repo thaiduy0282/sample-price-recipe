@@ -16,10 +16,12 @@ import lombok.Setter;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class Condition {
-    // TODO: Currently, just apply the sample condition for quantity attribute like Buy >= 2 itemA, >= 3 itemB,...
-    private String objectId;    // E.g., productId
+    // apply the condition like Buy >= 2 Tshirt, >= 3 Vest,...
+    private String objectId;    // E.g., productId=1234abc
+    private String expression;   // E.g., category.name=Tshirt && product.name=ABC
+    private int value;        // The value to compare with
+}
+
 //    private String objectName;   // E.g., product, category, etc.
 //    private String objectField;  // E.g., name, quantity
 //    private String operator;     // E.g., ==, >=, <=
-    private int value;        // The value to compare with
-}

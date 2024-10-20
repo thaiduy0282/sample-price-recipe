@@ -9,6 +9,8 @@ import com.example.demo.models.buyXGetY.Adjustment;
 import com.example.demo.models.buyXGetY.BuyConditionGroup;
 import com.example.demo.models.buyXGetY.Condition;
 import com.example.demo.utils.FormulaEvaluator;
+import lombok.val;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -171,33 +173,6 @@ public class Util {
                 FormulaEvaluator.evaluateFormula(formula, lineItem);
     }
 
-    public static double calculateAdjustedPriceWithLimit(Double price, String dealStrategy, String applicationType, double applicationValue) {
-        double adjustedPrice = price;
-        double adjustmentValue = getAdjustmentValue(price, applicationType, applicationValue);
-
-        if ("discount".equalsIgnoreCase(dealStrategy)) {
-            adjustedPrice = Math.max(0, price - adjustmentValue);
-        } else if ("markup".equalsIgnoreCase(dealStrategy)) {
-            adjustedPrice = price + adjustmentValue;
-        }
-
-        return  adjustedPrice;
-    }
-
-    private static double getAdjustmentValue(Double price, String applicationType, double applicationValue) {
-        double adjustmentValue;
-
-        switch (applicationType) {
-            case "Percentage" -> // Apply percentage-based
-                    adjustmentValue = (price * (applicationValue / 100));
-            case "Amount" -> // Apply fixed amount-based
-                    adjustmentValue = applicationValue;
-            default -> throw new IllegalStateException("Unexpected value: " + applicationType);
-        }
-
-        return adjustmentValue;
-    }
-
     public static boolean matchesCondition(Condition condition, List<LineItem> item) {
         return item.stream()
             .anyMatch(i ->
@@ -205,68 +180,162 @@ public class Util {
             );
     }
 
-    private static boolean matchesCondition(Condition condition, LineItem i) {
-        return i.getProductId().equals(condition.getObjectId())
-                && i.getQuantity().intValue() >= condition.getValue();
+    /**
+     * Checks if the given line item matches the provided condition.
+     */
+    public static boolean matchesCondition(Condition condition, LineItem item) {
+        // Check objectId condition first (fast path)
+        if (condition.getObjectId() != null && !condition.getObjectId().isEmpty()) {
+            if (!item.getProductId().equals(condition.getObjectId())) {
+                return false;  // Mismatch, exit early
+            }
+        }
+
+        // Check quantity condition
+        if (item.getQuantity() < condition.getValue()) {
+            return false;  // Insufficient quantity, exit early
+        }
+
+        // Check expression condition (if any)
+        if (condition.getExpression() != null && !condition.getExpression().isEmpty()) {
+            return isValidFormula(condition.getExpression(), item);
+        }
+
+        // All conditions satisfied
+        return true;
     }
 
-    public static int maxApplicableTimes(List<LineItem> lineItems, Condition condition) {
+    public static int maxApplicableTimes(List<LineItem> lineItems, Condition condition, PriceRecipe recipe) {
+        return switch (recipe.getAggregationStrategy()) {
+            case SUM -> getApplicableTimesBySum(lineItems, condition);
+            case MAX -> getMaxApplicableTimesForConditionByHighestQuantity(lineItems, condition);
+            case FIRST_MATCH -> getApplicableTimesByFirstMatch(lineItems, condition);
+        };
+    }
+
+    /**
+     * Sum the quantities of all matching items.
+     * Find the maximum number of times a condition can apply across all matching line items.
+     *
+     * Use Case Example
+     * Condition:
+     * Buy 3 T-shirts -> Get 1 free
+     *
+     * Cart:
+     * 4 Red T-shirts
+     * 5 Blue T-shirts
+     * Here, the total quantity is 4 + 5 = 9. This should allow us to apply the condition 3 times (since 9 / 3 = 3).
+     */
+    private static int getApplicableTimesBySum(List<LineItem> lineItems, Condition condition) {
+        int totalMatchingQuantity = lineItems.stream()
+            .filter(item -> matchesCondition(condition, item)) // Only matching items
+            .mapToInt(lineItem -> lineItem.getQuantity().intValue()) // Extract quantities
+            .sum(); // Sum all matching quantities
+
+        return totalMatchingQuantity / condition.getValue(); // Calculate max applicable times
+    }
+
+    /**
+     * Use only the first matched item to calculate applicable times.
+     */
+    private static int getApplicableTimesByFirstMatch(List<LineItem> lineItems, Condition condition) {
         return lineItems.stream()
             .filter(item -> matchesCondition(condition, item))
-            .mapToInt(item -> (int) (item.getQuantity() / condition.getValue()))
             .findFirst()
+            .map(item -> (int) (item.getQuantity() / condition.getValue()))
             .orElse(0);
     }
 
-    public static Map<Adjustment, Double> createAdjustment(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO, BuyConditionGroup buyConditionGroup, int times) {
+    /**
+     * Use the item with the highest quantity to calculate applicable times.
+     *
+     * Find the maximum number of times a condition can apply based on the item with the highest quantity.
+     *
+     * Use Case Example
+     * Condition:
+     * Buy 3 T-shirts → Get 1 free
+     *
+     * Cart:
+     * 4 Red T-shirts
+     * 5 Blue T-shirts
+     * In this case, instead of summing 4 + 5 = 9, we will only consider the Blue T-shirts (since 5 is the highest quantity). The maximum applicable times will be:
+     * 5 / 3 = 1 (can apply 1 time).
+     */
+    // Find the line item with the highest quantity that matches the condition
+    private static int getMaxApplicableTimesForConditionByHighestQuantity(List<LineItem> lineItems, Condition condition) {
+        return lineItems.stream()
+            .filter(item -> matchesCondition(condition, item)) // Filter matching items
+            .mapToInt(lineItem -> lineItem.getQuantity().intValue()) // Extract quantities
+            .max() // Find the highest quantity
+            .orElse(0) / condition.getValue(); // Calculate max applicable times
+    }
+
+    /**
+     * If you want to track which item was used (e.g., for reporting or logging purposes)
+     */
+    private Pair<LineItem, Integer> getMaxApplicableTimesWithItem(List<LineItem> lineItems, Condition condition) {
+        return lineItems.stream()
+            .filter(item -> matchesCondition(condition, item))
+            .max(Comparator.comparingInt(item -> item.getQuantity().intValue()))
+            .map(item -> Pair.of(item, (int) (item.getQuantity() / condition.getValue())))
+            .orElse(Pair.of(null, 0));
+    }
+
+    public static Map<List<Adjustment>, Double> createAdjustment(PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO, BuyConditionGroup buyConditionGroup, int times) {
         // TODO: Just calculate based on first adjustment for now
-        // Get the first adjustment from the group
-        Adjustment adjustment = buyConditionGroup.getGetSection().getAdjustments().getFirst();
 
-        // Find the matching LineItem from the cart
-        List<LineItem> lineItems = profilingRequestDTO.getLineItems();
-        LineItem lineItem = lineItems.stream()
-                .filter(item -> item.getProductId().equals(adjustment.getProductId()))
-                .findFirst()
-                .orElse(null);
+        val adjustments = buyConditionGroup.getGetSection().getAdjustments();
+        var totalAdjustmentValue = 0.0;
+        for (Adjustment adjustment : adjustments) {
+//        Adjustment adjustment = adjustments.getFirst();
 
-        if (lineItem == null) {
-            return Collections.emptyMap(); // No matching product, return empty map
+            // Find the matching LineItem from the cart
+            List<LineItem> lineItems = profilingRequestDTO.getLineItems();
+            LineItem lineItem = lineItems.stream()
+                    .filter(item -> item.getProductId().equals(adjustment.getProductId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (lineItem == null) {
+                return Collections.emptyMap(); // No matching product, return empty map
+            }
+
+            // Get the latest discount detail for this LineItem and pricing context
+            DiscountDetails latestDiscount = null;
+            try {
+                latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
+            } catch (Exception e) {
+                // handle log for exception or just ignore it
+                // Mockup latest Discount for testing
+                latestDiscount = new DiscountDetails();
+                latestDiscount.setAfterAdjustment(lineItem.getNetPrice());
+            }
+
+            if (latestDiscount != null) {
+                Double priceAfterAdjustment = latestDiscount.getAfterAdjustment();
+
+                double adjustmentValue = calculateAdjustmentValue(
+                        priceAfterAdjustment,
+                        adjustment.getDealStrategy(),
+                        adjustment.getApplicationType(),
+                        adjustment.getApplicationValue(),
+                        lineItem.getQuantity().intValue(),
+                        adjustment.getRequiredQuantity(),
+                        times
+                );
+                totalAdjustmentValue += adjustmentValue;
+                adjustment.setApplicationValue(adjustmentValue);
+
+            } else {
+                throw new IllegalStateException("Could not found latest discount!");
+            }
         }
 
-        // Get the latest discount detail for this LineItem and pricing context
-        DiscountDetails latestDiscount = null;
-        try {
-            latestDiscount = findLatestDiscountDetail(lineItem.getId(), priceRecipe.getPriceApplicationON(), profilingRequestDTO);
-        } catch (Exception e) {
-            // handle log for exception or just ignore it
-            // Mockup latest Discount for testing
-            latestDiscount = new DiscountDetails();
-            latestDiscount.setAfterAdjustment(lineItem.getNetPrice());
-        }
+        // Store the adjustment in a map
+        Map<List<Adjustment>, Double> adjustmentMap = new HashMap<>();
+        adjustmentMap.put(adjustments, totalAdjustmentValue);
 
-        if (latestDiscount != null) {
-            Double priceAfterAdjustment = latestDiscount.getAfterAdjustment();
-
-            double adjustmentValue = calculateAdjustmentValue(
-                    priceAfterAdjustment,
-                    adjustment.getDealStrategy(),
-                    adjustment.getApplicationType(),
-                    adjustment.getApplicationValue(),
-                    lineItem.getQuantity().intValue(),
-                    adjustment.getRequiredQuantity(),
-                    times
-            );
-
-            // Store the adjustment in a map
-            Map<Adjustment, Double> adjustmentMap = new HashMap<>();
-            adjustment.setApplicationValue(abs(adjustmentValue));
-            adjustmentMap.put(adjustment, adjustmentValue);
-
-            return adjustmentMap;
-        } else {
-            throw new IllegalStateException("Could not found latest discount!");
-        }
+        return adjustmentMap;
     }
 
     /**
