@@ -40,17 +40,36 @@ public class BuyXGetYService {
      * Find all possible adjustments from the recipe.
      */
     private Map<List<Adjustment>, Double> calculateAllPossibleAdjustments(PriceRecipe recipe, ProfilingRequestDTO profilingRequestDTO) {
-        Map<List<Adjustment>, Double> adjustments = new HashMap<>();
+        Map<List<Adjustment>, Double> allAdjustments  = new HashMap<>();
         List<LineItem> lineItems = profilingRequestDTO.getLineItems();
 
-        for (BuyConditionGroup group : recipe.getConditionGroups()) {
-            val conditions = group.getBuySection().getConditions();
-            if (isSatisfied(lineItems, conditions)) {
-                int applicableTimes = maxApplicableTimes(lineItems, conditions);
-                adjustments.putAll(Util.createAdjustment(recipe, profilingRequestDTO, group, applicableTimes));
-            }
+        recipe.getConditionGroups().stream()
+            .filter(group -> isSatisfied(lineItems, group.getBuySection().getConditions())) // Check if the group is applicable
+            .forEach(group -> {
+                int applicableTimes = maxApplicableTimes(lineItems, group.getBuySection().getConditions(), recipe);
+
+                // Generate adjustments and add them to the result map
+                Map<List<Adjustment>, Double> adjustments = Util.createAdjustment(
+                    recipe, profilingRequestDTO, group, applicableTimes);
+
+                allAdjustments.putAll(adjustments);
+            });
+
+        return allAdjustments;
+    }
+
+    /**
+     * Calculate the max applicable times based on the PriceRecipe's aggregation strategy.
+     */
+    private int maxApplicableTimes(List<LineItem> lineItems, List<Condition> conditions, PriceRecipe recipe) {
+        int totalApplicableTimes = Integer.MAX_VALUE;
+
+        for (Condition condition : conditions) {
+            int applicableTimes = Util.maxApplicableTimes(lineItems, condition, recipe);
+            totalApplicableTimes = Math.min(totalApplicableTimes, applicableTimes);  // Ensure min times across all conditions
         }
-        return adjustments;
+
+        return totalApplicableTimes;
     }
 
     /**
@@ -72,13 +91,6 @@ public class BuyXGetYService {
 
     public boolean isSatisfied(List<LineItem> cart, List<Condition> buyConditions) {
         return buyConditions.stream().allMatch(condition -> Util.matchesCondition(condition, cart));
-    }
-
-    public int maxApplicableTimes(List<LineItem> cart, List<Condition> buyConditions) {
-        return buyConditions.stream()
-            .mapToInt(condition -> Util.maxApplicableTimes(cart, condition))
-            .min()
-            .orElse(0);
     }
 
     private void applyBestAdjustment(LineItem item, Adjustment adjustment, PriceRecipe priceRecipe, ProfilingRequestDTO profilingRequestDTO) {

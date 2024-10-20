@@ -29,8 +29,8 @@ class BuyXGetYServiceTest {
 
         // Create BuyConditionGroups for the recipe
         BuyConditionGroup group1 = new BuyConditionGroup(
-            new BuySection(List.of(new Condition("iPhone", 2),
-                new Condition("iPad", 1))),
+            new BuySection(List.of(new Condition("iPhone", "product.color=Red && product.version=16 ", 2),
+                new Condition("iPad", "product.model=2024", 1))),
             new GetSection(List.of(
                     new Adjustment("Samsung", "Discount", "Percentage", 4, 100.0),
                     new Adjustment("Pen", "Discount", "Percentage", 1, 100.0)
@@ -38,7 +38,7 @@ class BuyXGetYServiceTest {
         );
 
         BuyConditionGroup group2 = new BuyConditionGroup(
-            new BuySection(List.of(new Condition("Samsung", 6))),
+            new BuySection(List.of(new Condition("Samsung", "", 6))),
             new GetSection(List.of(
                     new Adjustment("Samsung", "Discount", "Percentage", 3, 100.0),
                     new Adjustment("Pen", "Discount", "Percentage", 3, 100.0)
